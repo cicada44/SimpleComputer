@@ -1,2 +1,13 @@
 # SimpleComputer
-Simple computer
+
+
+## **Build**:
+### *make*
+<br>
+
+## **Execute**:
+### *make run*
+<br>
+
+
+

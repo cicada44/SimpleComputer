@@ -51,5 +51,7 @@ int main()
 
     // printf("%x\n", 0xffff);
 
+    sc_memoryDelete();
+
     return 0;
 }

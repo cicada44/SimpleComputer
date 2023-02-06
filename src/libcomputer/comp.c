@@ -2,13 +2,15 @@
 
 #include <stdlib.h>
 
+#include <search.h>
+
 #include <stdio.h>
 
 #define ZERO_BIT 0x0
 #define ONE_BIT 0x1
 #define MASK_DECODE_COMMAND 0x7f
 
-static int flags;
+static int flags = 0;
 
 static int* memory = NULL;
 
@@ -24,6 +26,10 @@ int sc_memoryInit()
 
     if (memory == NULL) {
         return -1;
+    }
+
+    for (int x = 0; x != 100; ++x) {
+        sc_memorySet(x, 0);
     }
 
     return 0;
@@ -57,12 +63,12 @@ int sc_memorySave(char* filename)
 {
     FILE* output_file = fopen(filename, "wb");
 
-    if (output_file == NULL) {
-        fclose(output_file);
+    if (output_file == NULL || memory == NULL) {
         return -1;
     }
 
     if (fwrite(memory, sizeof(int), 100, output_file) != 100) {
+        fclose(output_file);
         return -1;
     }
 
@@ -75,12 +81,12 @@ int sc_memoryLoad(char* filename)
 {
     FILE* input_file = fopen(filename, "rb");
 
-    if (input_file == NULL) {
-        fclose(input_file);
+    if (input_file == NULL || memory == NULL) {
         return -1;
     }
 
     if (fread(memory, sizeof(int), 100, input_file) != 100) {
+        fclose(input_file);
         return -1;
     }
 
@@ -120,7 +126,7 @@ int sc_regGet(int reg, int* value)
 int sc_commandEncode(int command, int operand, int* value)
 {
     if (bsearch(&command, commands, 38, sizeof(int), comp) == NULL
-        || operand > 0x7f || value == NULL) {
+        || operand > 0x7f || command > 0x7f || value == NULL) {
         return -1;
     }
 
@@ -148,6 +154,15 @@ int sc_commandDecode(int value, int* command, int* operand)
     return 0;
 }
 
+int sc_memoryDelete()
+{
+    if (memory == NULL) {
+        return -1;
+    }
+    free(memory);
+    return 0;
+}
+
 void output_memory()
 {
     for (size_t i = 0; i != 100; ++i) {
@@ -169,5 +184,5 @@ void bin(unsigned n)
 
 int comp(const void* n1, const void* n2)
 {
-    return (n1 > n2) ? -1 : 1;
+    return (*(int*)n1 - *(int*)n2);
 }
