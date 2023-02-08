@@ -8,6 +8,8 @@
 
 #include <unistd.h>
 
+#define DIFF_BG_COLOR 10
+
 int mt_clrscr()
 {
     if (printf("\E[H\E[J") != 1) {
@@ -22,6 +24,8 @@ int mt_gotoXX(int x, int y)
     if (x < 0 || y < 0) {
         return FAIL_CODE;
     }
+
+    printf("\e[10C");
 
     return SUCCESS_CODE;
 }
@@ -40,11 +44,21 @@ int mt_getscreensize(int* rows, int* cols)
     return SUCCESS_CODE;
 }
 
-int mt_setfgcolor(enum colors c)
+int mt_setfgcolor(enum color c)
 {
-    printf("\x1b[");
-    printf("%d", c);
-    printf("m");
+    if (printf("\x1b[") != 2 || printf("%d", c) != 2 || printf("m") != 1) {
+        return FAIL_CODE;
+    }
+
+    return SUCCESS_CODE;
+}
+
+int mt_setbgcolor(enum color c)
+{
+    if (printf("\x1b[") != 2 || printf("%d", c + DIFF_BG_COLOR) != 2
+        || printf("m") != 1) {
+        return FAIL_CODE;
+    }
 
     return SUCCESS_CODE;
 }

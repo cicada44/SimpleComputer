@@ -8,10 +8,12 @@
 
 int main()
 {
-    // mt_clrscr();
+    printf("\033[0m");
 
-    enum colors r = RED;
-    enum colors y = YELLOW;
+    mt_clrscr();
+
+    enum color r = RED;
+    enum color y = YELLOW;
 
     mt_setfgcolor(r);
 
@@ -20,9 +22,14 @@ int main()
     int* rows = malloc(sizeof(int));
     int* cols = malloc(sizeof(int));
 
-    mt_setfgcolor(y);
+    mt_setbgcolor(y);
 
     mt_getscreensize(rows, cols);
 
     printf("rows - %d\tcols - %d\n", *rows, *cols);
+
+    mt_gotoXX(30, 20);
+
+    int i;
+    scanf("%d", &i);
 }
