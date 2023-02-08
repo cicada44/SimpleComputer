@@ -1,58 +1,60 @@
 CC = gcc
-FLAGS = -Wall -Wextra -Werror -pedantic
+CFLAGS = -Wall -Wextra -Werror
+CPPFLAGS = -I src -I thirdparty
+# LDFLAGS =
+# LDLIBS =
 
-BUILD_DIR = build
-SRC_DIR = src
-TEST_DIR = test
+APP_NAME = SimpleComputer
+LIB_NAME = libcomputer
+LIB_TERM_NAME = libterm
 
 OBJ_DIR = obj
-LIB_DIR = $(BUILD_DIR)/lib
-OBJ_SRC_DIR = $(BUILD_DIR)/$(OBJ_DIR)/$(SRC_DIR)
-OBJ_TEST_DIR = $(BUILD_DIR)/$(OBJ_DIR)/$(TEST_DIR)
-EXE_DIR = $(BUILD_DIR)/exe
+OBJ_SRC_DIR = $(OBJ_DIR)/src
+OBJ_TEST_DIR = $(OBJ_DIR)/test
 
-LIBCOMP_DIR = $(SRC_DIR)/libcomputer
-MAIN_DIR = $(SRC_DIR)/app
+LIB_DIR = lib
+BIN_DIR = bin
+SRC_DIR = src
 
-.PHONY: computer.o libcomputer.a main.o app all
+APP_PATH = $(BIN_DIR)/$(APP_NAME)
+LIB_PATH = $(LIB_DIR)/$(LIB_NAME).a
+LIB_TERM_PATH = $(LIB_DIR)/$(LIB_TERM_NAME).a
 
-all: computer.o libcomputer.a main.o app
+SRC_EXT = c
 
-app: $(OBJ_SRC_DIR)/main.o $(LIB_DIR)/libcomputer.a
-	$(CC) $(FLAGS) -o $(EXE_DIR)/$@ $^
+APP_SOURCES = $(shell find $(SRC_DIR)/$(APP_NAME) -name '*.$(SRC_EXT)')
+APP_OBJECTS = $(APP_SOURCES:$(SRC_DIR)/%.$(SRC_EXT)=$(OBJ_DIR)/$(SRC_DIR)/%.o)
 
-main.o: $(MAIN_DIR)/main.c
-	$(CC) -I src -c $(FLAGS) -o $(OBJ_SRC_DIR)/$@ $<
+LIB_SOURCES = $(shell find $(SRC_DIR)/$(LIB_NAME) -name '*.$(SRC_EXT)')
+LIB_OBJECTS = $(LIB_SOURCES:$(SRC_DIR)/%.$(SRC_EXT)=$(OBJ_DIR)/$(SRC_DIR)/%.o)
 
-libcomputer.a: $(OBJ_SRC_DIR)/computer.o
-	ar rcs $(LIB_DIR)/$@ $^
+LIB_TERM_SOURCES = $(shell find $(SRC_DIR)/$(LIB_TERM_NAME) -name '*.$(SRC_EXT)')
+LIB_TERM_OBJECTS = $(LIB_TERM_SOURCES:$(SRC_DIR)/%.$(SRC_EXT)=$(OBJ_DIR)/$(SRC_DIR)/%.o)
 
-computer.o: $(LIBCOMP_DIR)/comp.c
-	$(CC) -I src -c $(FLAGS) -o $(OBJ_SRC_DIR)/$@ $<
+DEPS=$(APP_OBJECTS:.o=.d)$(LIB_OBJECTS:.o=.d)$(LIB_TERM_OBJECTS:.o=.d)
 
-run: $(EXE_DIR)/app
-	$(EXE_DIR)/app
+.PHONY: all
+all: $(APP_PATH) 
 
-# TEST
+-include $(DEPS)
 
-.PHONY: all test.o main_test.o test_app test
+$(APP_PATH): $(APP_OBJECTS) $(LIB_PATH) $(LIB_TERM_PATH) 
+	$(CC) $(CFLAGS) $(CPPFLAGS) $^ -o $@
 
-test: all test.o main_test.o test_app
+$(LIB_PATH): $(LIB_OBJECTS)
+	ar rcs $@ $^
 
-test_app: $(OBJ_TEST_DIR)/test.o $(OBJ_TEST_DIR)/main_test.o $(LIB_DIR)/libcomputer.a
-	$(CC) $(FLAGS) -o $(EXE_DIR)/$@ $^
+$(LIB_TERM_PATH): $(LIB_TERM_OBJECTS)
+	ar rcs $@ $^
 
-main_test.o: $(TEST_DIR)/main.c
-	$(CC) $(FLAGS) -I thirdparty -I src -c -o $(OBJ_TEST_DIR)/$@ $<
+$(OBJ_DIR)/%.o: %.c
+	$(CC) -c $(CFLAGS) $(CPPFLAGS) $< -o $@
 
-test.o: $(TEST_DIR)/test.c
-	$(CC) $(FLAGS) -I thirdparty -I src -c -o $(OBJ_TEST_DIR)/$@ $<
+run: $(APP_PATH)
+	$(APP_PATH)
 
-run_test: $(EXE_DIR)/test_app
-	$(EXE_DIR)/test_app
-
-
-# CLEAN
-
+.PHONY: clean
 clean:
-	rm -rf build/lib/* build/exe/* build/obj/*/*
+	$(RM) $(APP_PATH) $(LIB_PATH) $(LIB_TERM_PATH)
+	find $(OBJ_DIR) -name '*.o' -exec $(RM) '{}' \;
+	find $(OBJ_DIR) -name '*.d' -exec $(RM) '{}' \;
