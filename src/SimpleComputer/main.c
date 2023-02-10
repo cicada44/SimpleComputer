@@ -6,9 +6,16 @@
 
 int main()
 {
-    printf("EXIT_CODE - %d\n", bc_box(2, 2, 3, 3));
+    mt_clrscr();
 
-    printf("%d", 0x59);
+    mt_gotoXX(5, 5);
+
+    mt_setbgcolor(GREEN);
+    mt_setfgcolor(BLUE);
+
+    printf("AAAAAAAA\n");
+
+    mt_resetcolor();
 
     return 0;
 }
