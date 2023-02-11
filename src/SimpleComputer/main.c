@@ -4,18 +4,25 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+void print_ext_table()
+{
+    for (int x = 0; x < 127; ++x) {
+        printf("%d - \e(0%c\n\n", x, x);
+    }
+    printf("\e(B");
+}
+
 int main()
 {
-    mt_clrscr();
+    // print_ext_table();
 
-    mt_gotoXX(5, 5);
+    // bc_box(5, 5, 10, 100);
 
-    mt_setbgcolor(GREEN);
-    mt_setfgcolor(BLUE);
+    int arr[2] = {127, 5};
 
-    printf("AAAAAAAA\n");
+    printf("\e(0%s\e(B", "a");
 
-    mt_resetcolor();
+    bc_printbigchar(arr, 4, 4, BLACK, WHITE);
 
-    return 0;
+    // mt_clrscr();
 }

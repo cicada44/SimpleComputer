@@ -7,8 +7,6 @@
 
 #define DIFF_BG_COLOR 10
 
-#define TERM_PATH "/dev/tty"
-
 #define NORMAL_COLOR_SIZE 6
 #define BUF_SIZE 15
 
@@ -23,7 +21,7 @@ int mt_clrscr()
 
     char buf[BUF_SIZE] = "\E[H\E[J";
 
-    write(term, buf, sizeof(buf) / sizeof(buf[0]));
+    write(term, buf, sizeof(buf));
 
     close(term);
 
