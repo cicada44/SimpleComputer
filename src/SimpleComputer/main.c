@@ -3,26 +3,43 @@
 #include <libterm/term.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
+#include <unistd.h>
 
-void print_ext_table()
-{
-    for (int x = 0; x < 127; ++x) {
-        printf("%d - \e(0%c\n\n", x, x);
-    }
-    printf("\e(B");
+void trytocatchme() {
+  mt_setbgcolor(BLACK);
+  mt_setfgcolor(YELLOW);
+
+  srand(time(0));
+
+  int *r = malloc(sizeof(int));
+  int *c = malloc(sizeof(int));
+
+  while (1) {
+    enum color cf = 30 + rand() % 8;
+    mt_setbgcolor(cf);
+
+    enum color cb = 30 + rand() % 8;
+    mt_setbgcolor(cb);
+
+    mt_getscreensize(r, c);
+
+    // mt_gotoXX(1, 1);
+    printf("CATСHMEEEEEEEEEEEEE\n");
+
+    mt_gotoXX(rand() % *r, rand() % *c);
+    printf("r - %d, c - %d\n", *r, *c);
+
+    sleep(1);
+
+    mt_clrscr();
+  }
 }
 
-int main()
-{
-    // print_ext_table();
+int main() {
+  // trytocatchme();
 
-    // bc_box(5, 5, 10, 100);
+  bc_box(5, 5, 40, 40);
 
-    int arr[2] = {127, 5};
-
-    printf("\e(0%s\e(B", "a");
-
-    bc_printbigchar(arr, 4, 4, BLACK, WHITE);
-
-    // mt_clrscr();
+  // mt_clrscr();
 }

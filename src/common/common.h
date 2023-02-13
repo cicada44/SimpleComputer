@@ -1,4 +1,31 @@
+// ALL
 #define FAIL_CODE -1
 #define SUCCESS_CODE 0
+#define READ_BIN "rb"
+#define WRITE_BIN "wb"
+
+// TERM
 #define RESET_COLOR "\033[0m"
 #define TERM_PATH "/dev/tty"
+#define BEGINNING_POS 1
+#define CLEAR_TERM "\E[H\E[J"
+#define MIN_POS 0
+#define DEFAULT_TERMINAL_CODE 1
+
+// REGISTER
+#define M_REGISTER_FLAG 3
+#define E_REGISTER_FLAG 3
+#define MIN_REGISTER_NUM 1
+#define TRUE_BIT_VALUE 1
+#define FALSE_BIT_VALUE 0
+#define MAX_REGISTER_NUM 5
+#define MIN_SHIFT 1
+#define SHIFT_DECODE 7
+
+// MEMORY
+#define MEMORY_SIZE 100
+#define MIN_MEMORY_ADDRESS 0
+#define MAX_MEMORY_ADDRESS 99
+#define DEFAULT_MEMORY_VALUE 0
+
+#define MAX_COMMAND_OPERATOR_VALUE 0x7f
