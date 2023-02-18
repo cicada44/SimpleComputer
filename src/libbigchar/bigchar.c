@@ -18,17 +18,13 @@
 #define LU "l"
 #define LB "m"
 
-#define NEWLINE "\n"
-
-int bc_printA(char* str) {
+int bc_printA(char *str) {
   printf("\e(0%s\e(B", str);
 
   return SUCCESS_CODE;
 }
 
 int bc_box(int x1, int y1, int x2, int y2) {
-  mt_clrscr();
-
   if (x1 < 0 || y1 < 0 || x2 < 0 || y2 < 0) {
     return FAIL_CODE;
   }
@@ -37,19 +33,21 @@ int bc_box(int x1, int y1, int x2, int y2) {
     return FAIL_CODE;
   }
 
+  // UPPER BOUND
   bc_printA(LU);
   for (int x = 0; x != y2; ++x) {
     if (bc_printA(HR) == FAIL_CODE) {
       return FAIL_CODE;
     }
   }
+
   bc_printA(RU);
   printf(NEWLINE);
 
+  ++x1;
+
   for (int i = 0; i != x2; ++i) {
-    for (int j = 0; j != y1 - 1; ++j) {
-      printf(" ");
-    }
+    mt_gotoXX(x1++, y1);
 
     if (bc_printA(VT_BOUND) == FAIL_CODE) {
       return FAIL_CODE;
@@ -66,27 +64,24 @@ int bc_box(int x1, int y1, int x2, int y2) {
     printf(NEWLINE);
   }
 
-  for (int j = 0; j != y1 - 1; ++j) {
-    printf(" ");
-  }
+  mt_gotoXX(x1++, y1);
 
+  // BOTTOM BOUND
   bc_printA(LB);
-
   for (int x = 0; x != y2; ++x) {
     if (bc_printA(HR) == FAIL_CODE) {
       return FAIL_CODE;
     }
   }
-
   bc_printA(RB);
+
+  printf(NEWLINE);
 
   return SUCCESS_CODE;
 }
 
 int bc_printbigchar(int a[2], int x, int y, enum color c_front,
                     enum color c_back) {
-  // bin(a[0]);
-
   int term = open(TERM_PATH, O_WRONLY);
 
   if (term == -1) {
@@ -106,27 +101,19 @@ int bc_printbigchar(int a[2], int x, int y, enum color c_front,
   }
 
   for (int i = 0; i != 2; i++) {
-    for (int j = 0; j != 4; ++j) {
-      for (int k = 0; k != x; ++k) {
-        printf(" ");
-      }
-
-      for (int k = 0; k != 8; ++k) {
-        int bit = a[i] >> 1;
-
-        if (bit == 1) {
+    for (int k = 0; k != 4; ++k) {
+      mt_gotoXX(x++, y);
+      for (int rad = 0; rad != 8; ++rad) {
+        int val = a[i] & ONE_BIT;
+        if (val == 1) {
           bc_printA(RECT);
         } else {
           printf(" ");
         }
-
         a[i] >>= 1;
       }
-
       printf(NEWLINE);
     }
-
-    printf(NEWLINE);
   }
 
   return SUCCESS_CODE;

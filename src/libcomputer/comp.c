@@ -5,7 +5,6 @@
 #include <stdlib.h>
 
 #define ZERO_BIT 0x0
-#define ONE_BIT 0x1
 #define MASK_DECODE_COMMAND 0x7f
 
 static int flags = 0;
@@ -153,17 +152,6 @@ int sc_memoryDelete() {
   free(memory);
 
   return SUCCESS_CODE;
-}
-
-void output_memory() {
-  for (size_t i = MIN_MEMORY_ADDRESS; i != MAX_MEMORY_ADDRESS + 1; ++i) {
-    if (i % 10 == 0 && i != 0) {
-      printf("\n");
-    }
-    printf("%3d ", memory[i]);
-  }
-
-  printf("\n");
 }
 
 void bin(unsigned n) {

@@ -1,3 +1,4 @@
+#include <SimpleComputer/interface.h>
 #include <libbigchar/bigchar.h>
 #include <libcomputer/comp.h>
 #include <libterm/term.h>
@@ -24,7 +25,6 @@ void trytocatchme() {
 
     mt_getscreensize(r, c);
 
-    // mt_gotoXX(1, 1);
     printf("CATСHMEEEEEEEEEEEEE\n");
 
     mt_gotoXX(rand() % *r, rand() % *c);
@@ -36,10 +36,10 @@ void trytocatchme() {
   }
 }
 
-int main() {
-  // trytocatchme();
+int main(void) {
+  // memory
+  sc_memoryInit();
+  sc_memorySet(10, 999);
 
-  bc_box(5, 5, 40, 40);
-
-  // mt_clrscr();
+  output_computer();
 }

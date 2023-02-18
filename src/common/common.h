@@ -3,6 +3,8 @@
 #define SUCCESS_CODE 0
 #define READ_BIN "rb"
 #define WRITE_BIN "wb"
+#define ONE_BIT 0x1
+#define NEWLINE "\n"
 
 // TERM
 #define RESET_COLOR "\033[0m"
@@ -27,5 +29,22 @@
 #define MIN_MEMORY_ADDRESS 0
 #define MAX_MEMORY_ADDRESS 99
 #define DEFAULT_MEMORY_VALUE 0
+
+// OUTPUT
+#define BEGIN_COORD_X 1
+#define BEGIN_COORD_Y 1
+#define END_COORD_X 10
+#define END_COORD_Y 60
+#define TITLE_CONTAINS 1
+#define TITLE_MEMORY "Memory"
+#define TITLE_ACCUM "accumulator"
+#define TITLE_COUNTER "instructionCounter"
+#define TITLE_OPERATION "Operation"
+#define TITLE_FLAGS "Flags"
+#define TITLE_KEYS "Keys"
+#define DEFAULT_FIELDS_LENGHT 17
+#define DEFAULT_FIELDS_SHIFT 3
+#define MEMORY_CELL_LEN 45
+#define MEMORY_CELL_NUMBER_SHIFT 11
 
 #define MAX_COMMAND_OPERATOR_VALUE 0x7f
