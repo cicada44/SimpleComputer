@@ -5,6 +5,7 @@
 #define WRITE_BIN "wb"
 #define ONE_BIT 0x1
 #define NEWLINE "\n"
+#define BITS_IN_BYTE 8
 
 // TERM
 #define RESET_COLOR "\033[0m"
@@ -45,6 +46,6 @@
 #define DEFAULT_FIELDS_LENGHT 17
 #define DEFAULT_FIELDS_SHIFT 3
 #define MEMORY_CELL_LEN 45
-#define MEMORY_CELL_NUMBER_SHIFT 11
+#define MEMORY_CELL_NUMBER_SHIFT 9
 
 #define MAX_COMMAND_OPERATOR_VALUE 0x7f

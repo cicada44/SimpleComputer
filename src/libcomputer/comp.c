@@ -98,7 +98,7 @@ int sc_regSet(int reg, int value) {
     return FAIL_CODE;
   }
 
-  (value == MIN_SHIFT) ? (flags |= (MIN_SHIFT << (reg - MIN_SHIFT)))
+  (value == ONE_BIT) ? (flags |= (MIN_SHIFT << (reg - MIN_SHIFT)))
                        : (flags &= (~(MIN_SHIFT << (reg - MIN_SHIFT))));
 
   return SUCCESS_CODE;
