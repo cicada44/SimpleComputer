@@ -40,8 +40,10 @@ void trytocatchme()
 int main(void)
 {
     // memory
-    sc_memoryInit();
-    sc_memorySet(10, 999);
+    // sc_memoryInit();
+    // sc_memorySet(10, 0);
 
-    output_computer();
+    // run_interface();
+
+    bctest();
 }

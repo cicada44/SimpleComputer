@@ -1,3 +1,8 @@
+/*
+    Big characters library.
+    All functions return SUCCESS or FAIL (defined in common.h).
+*/
+
 #include <common/common.h>
 #include <fcntl.h>
 #include <libbigchar/bigchar.h>
@@ -8,8 +13,7 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
-#define EXT_SYM(x) "\e(0%s\e(B", x
-
+// Extended ascii chars.
 #define RECT "a"
 #define HR "q"
 #define VT_BOUND "x"
@@ -18,149 +22,313 @@
 #define LU "l"
 #define LB "m"
 
-int bc_printA(char* str)
-{
-    printf("\e(0%s\e(B", str);
+// 1st and 2nd ints in bigchar array.
+#define BC_FIRST_N 0
+#define BC_SECOND_N 1
 
-    return SUCCESS_CODE;
+// Min line number in bigchar array.
+#define MIN_LINE_N 1
+// Max line number in bigchar array.
+#define MAX_LINE_N 8
+
+// Prints newline.
+int bc_printNL()
+{
+    // Turn off buffering.
+    setvbuf(stdout, NULL, _IONBF, 0);
+
+    int term = open(TERM_PATH, O_WRONLY);
+
+    if (term == FAIL) {
+        return FAIL;
+    }
+
+    write(term, NEWLINE, strlen(NEWLINE));
+
+    close(term);
+
+    return SUCCESS;
 }
 
-int bc_box(int x1, int y1, int x2, int y2)
+// Print escape sequence string.
+int bc_printA(char* str)
 {
-    if (x1 < 0 || y1 < 0 || x2 < 0 || y2 < 0) {
-        return FAIL_CODE;
+    // Turn off buffering.
+    setvbuf(stdout, NULL, _IONBF, 0);
+
+    int term = open(TERM_PATH, O_WRONLY);
+
+    if (term == FAIL) {
+        return FAIL;
     }
 
-    if (mt_gotoXX(x1, y1) == FAIL_CODE) {
-        return FAIL_CODE;
+    char buf[strlen(str)];
+
+    sprintf(buf, "\e(0%s\e(B", str);
+
+    write(term, buf, strlen("\e(0%s\e(B"));
+
+    // printf("\e(0%s\e(B", str);
+
+    close(term);
+
+    return SUCCESS;
+}
+
+// Prints the upper bound of lenght len.
+int bc_printUB(int len)
+{
+    if (bc_printA(LU) == FAIL) {
+        return FAIL;
     }
 
-    // UPPER BOUND
-    bc_printA(LU);
-    for (int x = 0; x != y2; ++x) {
-        if (bc_printA(HR) == FAIL_CODE) {
-            return FAIL_CODE;
+    for (int i = 0; i != len; ++i) {
+        if (bc_printA(HR) == FAIL) {
+            return FAIL;
         }
     }
 
-    bc_printA(RU);
-    printf(NEWLINE);
+    if (bc_printA(RU) == FAIL) {
+        return FAIL;
+    }
 
+    bc_printNL();
+
+    return SUCCESS;
+}
+
+// Prints the bottom bound of lenght len.
+int bc_printBB(int len)
+{
+    if (bc_printA(LB) == FAIL) {
+        return FAIL;
+    }
+
+    for (int i = 0; i != len; ++i) {
+        if (bc_printA(HR) == FAIL) {
+            return FAIL;
+        }
+    }
+    if (bc_printA(RB) == FAIL) {
+        return FAIL;
+    }
+
+    bc_printNL();
+
+    return SUCCESS;
+}
+
+// Print empty string of lenght len.
+int bc_printES(int len)
+{
+    int term = open(TERM_PATH, O_WRONLY);
+
+    if (term == FAIL) {
+        return FAIL;
+    }
+
+    for (int i = 0; i != len; ++i) {
+        write(term, " ", 2);
+    }
+
+    close(term);
+
+    return SUCCESS;
+}
+
+// Print box which beginnig in (x1, y2) and ending in (x2, y2).
+int bc_box(int x1, int y1, int x2, int y2)
+{
+    // Turn off buffering.
+    setvbuf(stdout, NULL, _IONBF, 0);
+
+    if (x1 < 0 || y1 < 0 || x2 < 0 || y2 < 0) {
+        return FAIL;
+    }
+
+    if (mt_gotoXX(x1, y1) == FAIL) {
+        return FAIL;
+    }
+
+    // Print upper bound.
+    if (bc_printUB(y2) == FAIL) {
+        return FAIL;
+    }
+
+    // Goto next line...
     ++x1;
 
     for (int i = 0; i != x2; ++i) {
         mt_gotoXX(x1++, y1);
 
-        if (bc_printA(VT_BOUND) == FAIL_CODE) {
-            return FAIL_CODE;
+        if (bc_printA(VT_BOUND) == FAIL) {
+            return FAIL;
         }
 
-        for (int j = 0; j != y2; ++j) {
-            printf(" ");
+        bc_printES(y2);
+
+        if (bc_printA(VT_BOUND) == FAIL) {
+            return FAIL;
         }
 
-        if (bc_printA(VT_BOUND) == FAIL_CODE) {
-            return FAIL_CODE;
-        }
-
-        printf(NEWLINE);
+        bc_printNL();
     }
 
+    // Goto last line...
     mt_gotoXX(x1++, y1);
 
-    // BOTTOM BOUND
-    bc_printA(LB);
-    for (int x = 0; x != y2; ++x) {
-        if (bc_printA(HR) == FAIL_CODE) {
-            return FAIL_CODE;
-        }
+    // Print bottom bound.
+    if (bc_printBB(y2) == FAIL) {
+        return FAIL;
     }
-    bc_printA(RB);
 
-    printf(NEWLINE);
-
-    return SUCCESS_CODE;
+    return SUCCESS;
 }
 
+// Print big char a_main to position (x, y), colors - c_front, c_back.
 int bc_printbigchar(
-        int a[2], int x, int y, enum color c_front, enum color c_back)
+        int a_main[BC_NUM], int x, int y, enum color c_front, enum color c_back)
 {
+    // Copy? Cause can't past in function BY THE VALUE!!!
+    int a[BC_NUM];
+    a[BC_FIRST_N] = a_main[BC_FIRST_N];
+    a[BC_SECOND_N] = a_main[BC_SECOND_N];
+
     int term = open(TERM_PATH, O_WRONLY);
 
-    if (term == -1) {
-        return FAIL_CODE;
+    if (term == FAIL) {
+        return FAIL;
     }
 
-    if (mt_setbgcolor(c_back) == FAIL_CODE) {
-        return FAIL_CODE;
+    if (mt_setbgcolor(c_back) == FAIL) {
+        return FAIL;
     }
 
-    if (mt_setbgcolor(c_front) == FAIL_CODE) {
-        return FAIL_CODE;
+    if (mt_setbgcolor(c_front) == FAIL) {
+        return FAIL;
     }
 
-    if (mt_gotoXX(x, y) == FAIL_CODE) {
-        return FAIL_CODE;
+    if (mt_gotoXX(x, y) == FAIL) {
+        return FAIL;
     }
 
-    for (int i = 0; i != 2; i++) {
-        for (int k = 0; k != 4; ++k) {
+    for (int i = 0; i != BC_NUM; i++) {
+        for (int k = 0; k != sizeof(int); ++k) {
             mt_gotoXX(x++, y);
-            for (int rad = 0; rad != 8; ++rad) {
+            for (int rad = 0; rad != BITS_IN_BYTE; ++rad) {
                 int val = a[i] & ONE_BIT;
-                if (val == 1) {
+                if (val == ONE_BIT) {
                     bc_printA(RECT);
                 } else {
-                    printf(" ");
+                    bc_printES(1);
                 }
-                a[i] >>= 1;
+                a[i] >>= MIN_SHIFT;
             }
-            printf(NEWLINE);
+            bc_printNL();
         }
     }
 
-    return SUCCESS_CODE;
+    close(term);
+
+    return SUCCESS;
 }
 
+// Sets value to big char of (x, y) coordinates.
 int bc_setbigcharpos(int* big, int x, int y, int value)
 {
-    if (big == NULL || x < 1 || x > 8 || y < 1 || y > 8
+    if (big == NULL || x < MIN_LINE_N || x > MAX_LINE_N || y < MIN_LINE_N
+        || y > MAX_LINE_N
         || (value != FALSE_BIT_VALUE && value != TRUE_BIT_VALUE)) {
-        return FAIL_CODE;
+        return FAIL;
     }
 
-    if (x < 5) {
+    // Char in the 1-4 lines.
+    if (x < (MAX_LINE_N / 2 + 1)) {
+        // Sets 1 or 0.
         (value == ONE_BIT)
-                ? (big[0]
-                   |= (MIN_SHIFT << ((BITS_IN_BYTE * (x - 1) + y) - MIN_SHIFT)))
-                : (big[0]
+                ? (big[BC_FIRST_N]
+                   |= (MIN_SHIFT
+                       << ((BITS_IN_BYTE * (x - SHIFT_DIFF) + y) - MIN_SHIFT)))
+                : (big[BC_FIRST_N]
                    &= (~(MIN_SHIFT
-                         << (((BITS_IN_BYTE * (x - 1) + y)) - MIN_SHIFT))));
-    } else {
+                         << (((BITS_IN_BYTE * (x - SHIFT_DIFF) + y))
+                             - MIN_SHIFT))));
+    }
+    // Char in the 5-8 lines.
+    else {
+        // Sets 1 or 0.
         (value == ONE_BIT)
-                ? (big[1]
-                   |= (MIN_SHIFT << ((BITS_IN_BYTE * (x - 1) + y) - MIN_SHIFT)))
-                : (big[1]
+                ? (big[BC_SECOND_N]
+                   |= (MIN_SHIFT
+                       << ((BITS_IN_BYTE * (x - SHIFT_DIFF) + y) - MIN_SHIFT)))
+                : (big[BC_SECOND_N]
                    &= (~(MIN_SHIFT
-                         << (((BITS_IN_BYTE * (x - 1) + y)) - MIN_SHIFT))));
+                         << (((BITS_IN_BYTE * (x - SHIFT_DIFF) + y))
+                             - MIN_SHIFT))));
     }
 
-    return SUCCESS_CODE;
+    return SUCCESS;
 }
 
+// Writes big char bit value of position (x, y).
 int bc_getbigcharpos(int* big, int x, int y, int* value)
 {
-    if (big == NULL || x < 1 || x > 8 || y < 1 || y > 8 || value == NULL) {
-        return FAIL_CODE;
+    if (big == NULL || x < MIN_LINE_N || x > MAX_LINE_N || y < MIN_LINE_N
+        || y > MAX_LINE_N || value == NULL) {
+        if (value != NULL) {
+            *value = 0;
+        }
+        return FAIL;
     }
 
-    if (x < 5) {
-        *value = (big[0] >> ((BITS_IN_BYTE * (x - 1) + y) - MIN_SHIFT))
+    if (x < MAX_LINE_N / 2 + 1) {
+        *value = (big[BC_FIRST_N]
+                  >> ((BITS_IN_BYTE * (x - SHIFT_DIFF) + y) - MIN_SHIFT))
                 & ONE_BIT;
     } else {
-        *value = (big[1] >> ((BITS_IN_BYTE * (x - 1) + y) - MIN_SHIFT))
+        *value = (big[BC_SECOND_N]
+                  >> ((BITS_IN_BYTE * (x - SHIFT_DIFF) + y) - MIN_SHIFT))
                 & ONE_BIT;
     }
 
-    return SUCCESS_CODE;
+    return SUCCESS;
+}
+
+// Write count big chars big to the fd.
+int bc_bigcharwrite(int fd, int* big, int count)
+{
+    if (big == NULL || count < 1) {
+        return FAIL;
+    }
+
+    if (write(fd, big, sizeof(int) * BC_NUM * count) == -1) {
+        return FAIL;
+    }
+
+    return SUCCESS;
+}
+
+// Read need_count chars from fd to big.
+// Writes the number of successfully read into count.
+int bc_bigcharread(int fd, int* big, int need_count, int* count)
+{
+    if (big == NULL || need_count < 1 || count == NULL) {
+        if (count != NULL) {
+            *count = 0;
+        }
+        return FAIL;
+    }
+
+    if (read(fd, big, need_count * sizeof(int) * 2) == FAIL) {
+        return FAIL;
+    }
+
+    // if (read(fd, big, need_count * sizeof(int) * 2)  need_count) {
+    // *count = 0;
+    // return FAIL;
+    // } else {
+    // *count = need_count;
+    // }
+
+    return SUCCESS;
 }

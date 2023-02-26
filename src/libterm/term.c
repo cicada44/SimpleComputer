@@ -1,3 +1,8 @@
+/*
+    Terminal library.
+    All functions return SUCCESS or FAIL (defined in common.h).
+*/
+
 #include <common/common.h>
 #include <fcntl.h>
 #include <libterm/term.h>
@@ -5,115 +10,151 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
+// Difference between foregr. and backgr. colors
+// in escape sequence.
 #define DIFF_BG_COLOR 10
 
+// Lenght of the escape sequence of color changing.
 #define NORMAL_COLOR_SIZE 6
-#define BUF_SIZE 15
 
-int mt_clrscr() {
-  int term = open(TERM_PATH, O_WRONLY);
+// Start position.
+#define START_POS 0
 
-  if (term == FAIL_CODE) {
-    return FAIL_CODE;
-  }
+// Escape sequences.
+#define CLEAR_TERM "\E[H\E[J\n"
+#define RESET_COLOR "\033[0m"
 
-  char buf[BUF_SIZE] = CLEAR_TERM;
+// Clears the console.
+int mt_clrscr()
+{
+    // Turn off buffering.
+    setvbuf(stdout, NULL, _IONBF, 0);
 
-  write(term, buf, sizeof(buf));
+    int term = open(TERM_PATH, O_WRONLY);
 
-  mt_gotoXX(BEGINNING_POS, BEGINNING_POS);
+    if (term == FAIL) {
+        return FAIL;
+    }
 
-  close(term);
+    char buf[BUF_SIZE] = CLEAR_TERM;
 
-  return SUCCESS_CODE;
-}
+    write(term, buf, BUF_SIZE);
 
-int mt_gotoXX(int x, int y) {
-  if (x < MIN_POS || y < MIN_POS) {
-    return FAIL_CODE;
-  }
+    mt_gotoXX(START_POS, START_POS);
 
-  int term = open(TERM_PATH, O_WRONLY);
-
-  if (term == FAIL_CODE) {
-    return FAIL_CODE;
-  }
-
-  char buf[BUF_SIZE] = {};
-
-  sprintf(buf, "\033[%d;%df", x, y);
-
-  write(term, buf, BUF_SIZE);
-
-  close(term);
-
-  return SUCCESS_CODE;
-}
-
-int mt_getscreensize(int *rows, int *cols) {
-  struct winsize ws;
-
-  if (rows == NULL || cols == NULL ||
-      ioctl(DEFAULT_TERMINAL_CODE, TIOCGWINSZ, &ws)) {
-    return FAIL_CODE;
-  }
-
-  *rows = ws.ws_row;
-  *cols = ws.ws_col;
-
-  return SUCCESS_CODE;
-}
-
-int mt_setfgcolor(enum color c) {
-  int term = open(TERM_PATH, O_WRONLY);
-
-  if (term == FAIL_CODE) {
     close(term);
-  }
 
-  char buf[BUF_SIZE];
-
-  sprintf(buf, "%s%d%s", "\e[", c, "m");
-
-  write(term, buf, NORMAL_COLOR_SIZE);
-
-  close(term);
-
-  return SUCCESS_CODE;
+    return SUCCESS;
 }
 
-int mt_setbgcolor(enum color c) {
-  int term = open(TERM_PATH, O_WRONLY);
+// Sets up position to the (x, y) coordinate.
+int mt_gotoXX(int x, int y)
+{
+    // Turn off buffering.
+    setvbuf(stdout, NULL, _IONBF, 0);
 
-  if (term == -1) {
-    return FAIL_CODE;
-  }
+    if (x < START_POS || y < START_POS) {
+        return FAIL;
+    }
 
-  char buf[BUF_SIZE];
+    int term = open(TERM_PATH, O_WRONLY);
 
-  sprintf(buf, "%s%d%s", "\e[", c + DIFF_BG_COLOR, "m");
+    if (term == FAIL) {
+        return FAIL;
+    }
 
-  write(term, buf, NORMAL_COLOR_SIZE);
+    char buf[BUF_SIZE] = {};
 
-  close(term);
+    sprintf(buf, "\033[%d;%df", x, y);
 
-  return SUCCESS_CODE;
+    write(term, buf, BUF_SIZE);
+
+    close(term);
+
+    return SUCCESS;
 }
 
-int mt_resetcolor() {
-  int term = open(TERM_PATH, O_WRONLY);
+// Write terminal scale to rows, cols.
+int mt_getscreensize(int* rows, int* cols)
+{
+    struct winsize ws;
 
-  if (term == -1) {
-    return FAIL_CODE;
-  }
+    if (rows == NULL || cols == NULL
+        || ioctl(TERMINAL_OPENCODE, TIOCGWINSZ, &ws)) {
+        return FAIL;
+    }
 
-  char buf[BUF_SIZE];
+    *rows = ws.ws_row;
+    *cols = ws.ws_col;
 
-  sprintf(buf, "%s", RESET_COLOR);
+    return SUCCESS;
+}
 
-  write(term, buf, BUF_SIZE);
+// Sets the foreground color of the output.
+int mt_setfgcolor(enum color c)
+{
+    // Turn off buffering.
+    setvbuf(stdout, NULL, _IONBF, 0);
 
-  close(term);
+    int term = open(TERM_PATH, O_WRONLY);
 
-  return SUCCESS_CODE;
+    if (term == FAIL) {
+        close(term);
+    }
+
+    char buf[BUF_SIZE] = {};
+
+    sprintf(buf, "%s%d%s", "\e[", c, "m");
+
+    write(term, buf, NORMAL_COLOR_SIZE);
+
+    close(term);
+
+    return SUCCESS;
+}
+
+// Sets the background color of the output.
+int mt_setbgcolor(enum color c)
+{
+    // Turn off buffering.
+    setvbuf(stdout, NULL, _IONBF, 0);
+
+    int term = open(TERM_PATH, O_WRONLY);
+
+    if (term == FAIL) {
+        return FAIL;
+    }
+
+    char buf[BUF_SIZE] = {};
+
+    sprintf(buf, "%s%d%s", "\e[", c + DIFF_BG_COLOR, "m");
+
+    write(term, buf, NORMAL_COLOR_SIZE);
+
+    close(term);
+
+    return SUCCESS;
+}
+
+// Resets color of the output.
+int mt_resetcolor()
+{
+    // Turn off buffering.
+    setvbuf(stdout, NULL, _IONBF, 0);
+
+    int term = open(TERM_PATH, O_WRONLY);
+
+    if (term == -1) {
+        return FAIL;
+    }
+
+    char buf[BUF_SIZE] = {};
+
+    sprintf(buf, "%s", RESET_COLOR);
+
+    write(term, buf, BUF_SIZE);
+
+    close(term);
+
+    return SUCCESS;
 }
