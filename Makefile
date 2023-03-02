@@ -5,18 +5,16 @@ LDFLAGS =
 LDLIBS =
 
 APP_NAME = SimpleComputer
-TEST_NAME = _test
+TEST_NAME = test
 LIB_COMPUTER_NAME = libcomputer
 LIB_TERM_NAME = libterm
 LIB_BIGCHAR_NAME = libbigchar
 LIB_READKEY_NAME = libreadkey
-
 SRC_DIR = src
-TEST_DIR = test
+TEST_DIR = src
 
 APP_PATH = $(APP_NAME)
-TEST_PATH = $(TEST_NAME)
-
+TEST_PATH = $(TEST_DIR)/test
 LIB_COMPUTER_PATH = $(SRC_DIR)/$(LIB_COMPUTER_NAME)/$(LIB_COMPUTER_NAME).a
 LIB_TERM_PATH = $(SRC_DIR)/$(LIB_TERM_NAME)/$(LIB_TERM_NAME).a
 LIB_BIGCHAR_PATH = $(SRC_DIR)/$(LIB_BIGCHAR_NAME)/$(LIB_BIGCHAR_NAME).a
@@ -39,16 +37,16 @@ LIB_BIGCHAR_OBJECTS = $(LIB_BIGCHAR_SOURCES:$(SRC_DIR)/%.$(SRC_EXT)=$(SRC_DIR)/%
 LIB_READKEY_SOURCES = $(shell find $(SRC_DIR)/$(LIB_READKEY_NAME) -name '*.$(SRC_EXT)')
 LIB_READKEY_OBJECTS = $(LIB_READKEY_SOURCES:$(SRC_DIR)/%.$(SRC_EXT)=$(SRC_DIR)/%.o)
 
-TEST_COMPUTER_SOURCES = $(shell find $(SRC_DIR)/$(LIB_READKEY_NAME) -name '*.$(SRC_EXT)')
-TEST_COMPUTER_OBJECTS = $(LIB_READKEY_SOURCES:$(SRC_DIR)/%.$(SRC_EXT)=$(SRC_DIR)/%.o)
+TEST_SOURCES = $(shell find $(TEST_NAME) -name '*.$(SRC_EXT)')
+TEST_OBJECTS = $(TEST_SOURCES:$(TEST_NAME)/%.c=$(TEST_NAME)/%.o)
 
 DEPS=$(APP_OBJECTS:.o=.d)$(LIB_COMPUTER_SOURCES:.o=.d)$(LIB_TERM_OBJECTS:.o=.d)$(LIB_READKEY_OBJECTS:.o=.d)$(TEST_OBJECTS:.o=.d)
 
 .PHONY: all
 all: $(APP_PATH)
 
-.PHONY: test
-test: $(APP_PATH) $(TEST_PATH)
+.PHONY: $(TEST_NAME)
+$(TEST_NAME): $(TEST_PATH)
 
 -include $(DEPS)
 
@@ -76,11 +74,12 @@ $(OBJ_DIR)/%.o: %.c
 run: ./$(APP_PATH)
 	./$(APP_PATH)
 
-test_run: $(TEST_PATH)
-	$(TEST_PATH)
+test_run: ./$(TEST_PATH)
+	./$(TEST_PATH)
 
 .PHONY: clean
 clean:
 	$(RM) $(APP_PATH) $(LIB_COMPUTER_PATH) $(LIB_TERM_PATH) $(TEST_PATH) $(LIB_BIGCHAR_PATH) $(LIB_READKEY_PATH)
 	find $(SRC_DIR) -name '*.o' -exec $(RM) '{}' \;
 	find $(SRC_DIR) -name '*.d' -exec $(RM) '{}' \;
+	find $(TEST_NAME) -name '*.o' -exec $(RM) '{}' \;
