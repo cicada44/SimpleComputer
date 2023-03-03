@@ -20,7 +20,7 @@
 #define DOWN_KEY "\E[B"
 #define UP_KEY "\E[A"
 #define LEFT_KEY "\E[D"
-#define RIGHT_KEY "\E[C"
+#define RIGHT_KEY "\033\133\103\n"
 
 int rk_readkey(enum keys* k)
 {
@@ -31,44 +31,50 @@ int rk_readkey(enum keys* k)
         return FAIL;
     }
 
-    char buf[BUF_SIZE];
+    char buf[5];
 
-    read(0, buf, BUF_SIZE);
+    read(0, buf, 5);
+
+    for (size_t x = 0; x != sizeof(buf); ++x) {
+        printf("%ld - %c\n", x, buf[x]);
+    }
+
+    // if (strcmp(buf, "\E[C") == 0) {
+    // printf("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n");
+    // }
 
     // Check the containing key.
-    for (size_t i = 0; i != strlen(KEYS); ++i) {
-        if (buf[0] == KEYS[i]) {
-            char key = buf[0];
-            if (key == 'l') {
-                *k = LOAD;
-                close(term);
-                return SUCCESS;
-            }
 
-            if (key == 's') {
-                *k = SAVE;
-                close(term);
-                return SUCCESS;
-            }
+    char key = buf[0];
 
-            if (key == 'r') {
-                *k = RUN;
-                close(term);
-                return SUCCESS;
-            }
+    if (key == 'l') {
+        *k = LOAD;
+        close(term);
+        return SUCCESS;
+    }
 
-            if (key == 't') {
-                *k = STEP;
-                close(term);
-                return SUCCESS;
-            }
+    if (key == 's') {
+        *k = SAVE;
+        close(term);
+        return SUCCESS;
+    }
 
-            if (key == 'i') {
-                *k = RESET;
-                close(term);
-                return SUCCESS;
-            }
-        }
+    if (key == 'r') {
+        *k = RUN;
+        close(term);
+        return SUCCESS;
+    }
+
+    if (key == 't') {
+        *k = STEP;
+        close(term);
+        return SUCCESS;
+    }
+
+    if (key == 'i') {
+        *k = RESET;
+        close(term);
+        return SUCCESS;
     }
 
     if (strcmp(buf, F5_KEY) == 0) {
@@ -108,6 +114,9 @@ int rk_readkey(enum keys* k)
     }
 
     close(term);
+
+    printf("UNKNOWN\n");
+    sleep(1);
 
     return FAIL;
 }

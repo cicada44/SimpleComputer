@@ -2,7 +2,7 @@
 
 // Big character.
 typedef struct NUM {
-  int N[2];
+    int N[2];
 } NUM;
 
 /* Prints RAM in the box beginning in the (x1, y1) coordinate and

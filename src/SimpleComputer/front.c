@@ -22,6 +22,9 @@ static int instruction_counter = 0;
 // Actual operation.
 static int actual_operation = 0;
 
+// Actual memory pointer.
+static size_t memory_pointer = 0;
+
 // Numbers for RAM output.
 NUM NUMS[]
         = {/* + */ {.N[0] = 0xFF181818, .N[1] = 0x181818FF},
@@ -82,9 +85,18 @@ int output_memory_in_box(int x1, int y1, int x2, int y2)
                 write(term, "+", 2);
             }
 
+            if (i * (MEMORY_SIZE / 10) + j == memory_pointer) {
+                mt_setfgcolor(BLACK);
+                mt_setbgcolor(WHITE);
+            }
+
             sprintf(buf, "%04X ", *tval);
 
             write(term, buf, sizeof(buf));
+
+            if (i * (MEMORY_SIZE / 10) + j == memory_pointer) {
+                mt_resetcolor();
+            }
         }
 
         bc_printNL();
@@ -378,6 +390,11 @@ int print_MC(int n)
     return SUCCESS;
 }
 
+// int process_key(enum keys* k)
+// {
+
+// }
+
 void interface()
 {
     int current_command = 0;
@@ -386,22 +403,26 @@ void interface()
 
     sc_memoryInit();
 
-    // while (1) {
-    // mt_clrscr();
-    output_memory_in_box(1, 1, 10, 60);
-    output_accum();
-    output_instrcounter(current_command);
-    output_operation();
-    output_flags();
-    output_keys();
-    output_iofield();
-    print_MC(0);
-    mt_gotoXX(23, 15);
+    while (1) {
+        mt_clrscr();
+        output_memory_in_box(1, 1, 10, 60);
+        output_accum();
+        output_instrcounter(current_command);
+        output_operation();
+        output_flags();
+        output_keys();
+        output_iofield();
+        print_MC(0);
+        mt_gotoXX(23, 15);
 
-    rk_readkey(&READABLE_KEYS);
+        rk_readkey(&READABLE_KEYS);
 
-    // sleep(1);
-    // }
+        if (READABLE_KEYS == RIGHT) {
+            memory_pointer += 1;
+        }
+
+        // sleep(1);
+    }
 
     mt_gotoXX(30, 0);
 
