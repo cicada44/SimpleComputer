@@ -17,7 +17,8 @@ enum keys {
     DOWN,
     LEFT,
     RIGHT,
-    ENTER
+    ENTER,
+    OTHER
 };
 
 /* Read sequence from terminal and write first pressed key to k.  */

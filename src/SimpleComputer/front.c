@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
+#include <termios.h>
 #include <unistd.h>
 
 // Computer accumulator.
@@ -23,7 +24,7 @@ static int instruction_counter = 0;
 static int actual_operation = 0;
 
 // Actual memory pointer.
-static size_t memory_pointer = 0;
+static __uint8_t memory_pointer = 0;
 
 // Numbers for RAM output.
 NUM NUMS[]
@@ -66,7 +67,7 @@ int output_memory_in_box(int x1, int y1, int x2, int y2)
     // Goto next line...
     ++x1;
 
-    for (size_t i = MIN_MEMORY_ADDRESS; i != MEMORY_SIZE / 10; ++i) {
+    for (__uint8_t i = MIN_MEMORY_ADDRESS; i != MEMORY_SIZE / 10; ++i) {
         // Goto next line...
         if (mt_gotoXX(x1++, y1 + 1) == FAIL) {
             return FAIL;
@@ -78,6 +79,11 @@ int output_memory_in_box(int x1, int y1, int x2, int y2)
                 return FAIL;
             }
 
+            if (i * (MEMORY_SIZE / 10) + j == memory_pointer) {
+                mt_setfgcolor(BLACK);
+                mt_setbgcolor(WHITE);
+            }
+
             if ((*tval & 0x4000) >> 14 == 1) {
                 write(term, "-", 2);
                 *tval >>= 1;
@@ -85,18 +91,17 @@ int output_memory_in_box(int x1, int y1, int x2, int y2)
                 write(term, "+", 2);
             }
 
-            if (i * (MEMORY_SIZE / 10) + j == memory_pointer) {
-                mt_setfgcolor(BLACK);
-                mt_setbgcolor(WHITE);
-            }
-
-            sprintf(buf, "%04X ", *tval);
+            sprintf(buf, "%04X", *tval);
 
             write(term, buf, sizeof(buf));
 
             if (i * (MEMORY_SIZE / 10) + j == memory_pointer) {
                 mt_resetcolor();
             }
+
+            sprintf(buf, " ");
+
+            write(term, buf, 1);
         }
 
         bc_printNL();
@@ -399,11 +404,11 @@ void interface()
 {
     int current_command = 0;
 
-    enum keys READABLE_KEYS;
-
     sc_memoryInit();
 
     while (1) {
+        enum keys READABLE_KEYS;
+
         mt_clrscr();
         output_memory_in_box(1, 1, 10, 60);
         output_accum();
@@ -412,16 +417,57 @@ void interface()
         output_flags();
         output_keys();
         output_iofield();
-        print_MC(0);
+        print_MC(memory_pointer);
         mt_gotoXX(23, 15);
 
         rk_readkey(&READABLE_KEYS);
 
         if (READABLE_KEYS == RIGHT) {
             memory_pointer += 1;
+        } else if (READABLE_KEYS == LEFT) {
+            memory_pointer -= 1;
+        } else if (READABLE_KEYS == DOWN) {
+            memory_pointer += 10;
+        } else if (READABLE_KEYS == UP) {
+            memory_pointer -= 10;
+        } else if (READABLE_KEYS == ENTER) {
+            int term = open(TERM_PATH, O_WRONLY);
+
+            if (term == FAIL || isatty(term) == 0) {
+                fprintf(stderr, "FAIL OPENING TERMINAL");
+                exit(FAIL);
+            }
+
+            write(0, "\nInput num: ", sizeof("\nInput num: "));
+
+            setvbuf(stdout, NULL, _IONBF, 0);
+
+            struct termios actual_term_set;
+
+            tcgetattr(0, &actual_term_set);
+
+            actual_term_set.c_lflag |= ISIG;
+            actual_term_set.c_lflag |= ICANON;
+
+            tcsetattr(0, TCSANOW, &actual_term_set);
+
+            char buf[6] = {};
+            read(0, buf, 6);
+
+            int actual_num = atoi(buf);
+
+            if (actual_num < 65535) {
+                sc_memorySet(memory_pointer, actual_num);
+            }
+
+            close(term);
         }
 
-        // sleep(1);
+        if (memory_pointer > 99) {
+            memory_pointer = 0;
+        } else if (memory_pointer == 255) {
+            memory_pointer = 99;
+        }
     }
 
     mt_gotoXX(30, 0);
