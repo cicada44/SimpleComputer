@@ -15,37 +15,16 @@
 #include <unistd.h>
 
 // Computer accumulator.
-static int accumulator = 0;
+static __int16_t accumulator = 0;
 
 // Computer instruction counter.
-static int instruction_counter = 0;
+static __uint8_t instruction_counter = 0;
 
 // Actual operation.
-static int actual_operation = 0;
+static __int16_t actual_operation = 0;
 
 // Actual memory pointer.
-static __uint8_t memory_pointer = 0;
-
-// Numbers for RAM output.
-NUM NUMS[]
-        = {/* + */ {.N[0] = 0xFF181818, .N[1] = 0x181818FF},
-           /* - */ {.N[0] = 0xFF000000, .N[1] = 0x000000FF},
-           /* 0 */ {.N[0] = 0x8181817e, .N[1] = 0x7e818181},
-           /* 1 */ {.N[0] = 0x8890A0C0, .N[1] = 0x80808080},
-           /* 2 */ {.N[0] = 0x2040827C, .N[1] = 0xFE040810},
-           /* 3 */ {.N[0] = 0x6080817E, .N[1] = 0x7E818060},
-           /* 4 */ {.N[0] = 0xFF818181, .N[1] = 0x80808080},
-           /* 5 */ {.N[0] = 0x7F0101FF, .N[1] = 0x7F808080},
-           /* 6 */ {.N[0] = 0x0101817E, .N[1] = 0x7E81817F},
-           /* 7 */ {.N[0] = 0x204080FE, .N[1] = 0x02040810},
-           /* 8 */ {.N[0] = 0x7E81817E, .N[1] = 0x7E818181},
-           /* 9 */ {.N[0] = 0x7E81817E, .N[1] = 0x7E808080},
-           /* A */ {.N[0] = 0x7E42423C, .N[1] = 0x42424242},
-           /* B */ {.N[0] = 0x3E42423E, .N[1] = 0x3E424242},
-           /* C */ {.N[0] = 0x0101017E, .N[1] = 0x7E010101},
-           /* D */ {.N[0] = 0x4242221E, .N[1] = 0x1E224242},
-           /* E */ {.N[0] = 0x7E02027E, .N[1] = 0x7E020202},
-           /* F */ {.N[0] = 0x7E02027E, .N[1] = 0x02020202}};
+// static __uint8_t instruction_counter = 0;
 
 int output_memory_in_box(int x1, int y1, int x2, int y2)
 {
@@ -79,14 +58,14 @@ int output_memory_in_box(int x1, int y1, int x2, int y2)
                 return FAIL;
             }
 
-            if (i * (MEMORY_SIZE / 10) + j == memory_pointer) {
+            if (i * (MEMORY_SIZE / 10) + j == instruction_counter) {
                 mt_setfgcolor(BLACK);
                 mt_setbgcolor(WHITE);
             }
 
-            if ((*tval & 0x4000) >> 14 == 1) {
+            if (*tval >> 13 == 1) {
                 write(term, "-", 2);
-                *tval >>= 1;
+                // *tval >>= 1;
             } else {
                 write(term, "+", 2);
             }
@@ -95,7 +74,7 @@ int output_memory_in_box(int x1, int y1, int x2, int y2)
 
             write(term, buf, sizeof(buf));
 
-            if (i * (MEMORY_SIZE / 10) + j == memory_pointer) {
+            if (i * (MEMORY_SIZE / 10) + j == instruction_counter) {
                 mt_resetcolor();
             }
 
@@ -378,9 +357,8 @@ int print_MC(int n)
     int* num = malloc(sizeof(int));
     sc_memoryGet(n, num);
 
-    if (*num >> 14 == 1) {
+    if (*num >> 13 == 1) {
         print_mem_cell_sign(NUMS[1]);
-        *num >>= 1;
     } else {
         print_mem_cell_sign(NUMS[0]);
     }
@@ -417,19 +395,20 @@ void interface()
         output_flags();
         output_keys();
         output_iofield();
-        print_MC(memory_pointer);
+        print_MC(instruction_counter);
+
         mt_gotoXX(23, 15);
 
         rk_readkey(&READABLE_KEYS);
 
         if (READABLE_KEYS == RIGHT) {
-            memory_pointer += 1;
+            instruction_counter += 1;
         } else if (READABLE_KEYS == LEFT) {
-            memory_pointer -= 1;
+            instruction_counter -= 1;
         } else if (READABLE_KEYS == DOWN) {
-            memory_pointer += 10;
+            instruction_counter += 10;
         } else if (READABLE_KEYS == UP) {
-            memory_pointer -= 10;
+            instruction_counter -= 10;
         } else if (READABLE_KEYS == ENTER) {
             int term = open(TERM_PATH, O_WRONLY);
 
@@ -456,17 +435,25 @@ void interface()
 
             int actual_num = atoi(buf);
 
-            if (actual_num < 65535) {
-                sc_memorySet(memory_pointer, actual_num);
+            if (actual_num < 0x3fff && actual_num > 0x0) {
+                sc_memorySet(instruction_counter, actual_num);
             }
 
             close(term);
         }
 
-        if (memory_pointer > 99) {
-            memory_pointer = 0;
-        } else if (memory_pointer == 255) {
-            memory_pointer = 99;
+        if (instruction_counter > 99) {
+            instruction_counter = 0;
+        } else if (instruction_counter == 255) {
+            instruction_counter = 99;
+        }
+
+        // Memory cell number.
+        int* n = malloc(sizeof(*n));
+        sc_memoryGet(instruction_counter, n);
+        if (*n >> 13 == 0) {
+            actual_operation = *n;
+            output_operation();
         }
     }
 
