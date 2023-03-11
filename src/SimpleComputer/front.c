@@ -373,10 +373,82 @@ int print_MC(int n)
     return SUCCESS;
 }
 
-// int process_key(enum keys* k)
-// {
+void process_key(enum keys* k)
+{
+    if (*k == RIGHT) {
+        instruction_counter += 1;
+    } else if (*k == LEFT) {
+        instruction_counter -= 1;
+    } else if (*k == DOWN) {
+        instruction_counter += 10;
+    } else if (*k == UP) {
+        instruction_counter -= 10;
+    } else if (*k == ENTER) {
+        int term = open(TERM_PATH, O_WRONLY);
 
-// }
+        if (term == FAIL || isatty(term) == 0) {
+            fprintf(stderr, FAIL_OPEN_TERM);
+            exit(FAIL);
+        }
+
+        write(0, MSG_INPUT_NUM, sizeof(MSG_INPUT_NUM));
+
+        setvbuf(stdout, NULL, _IONBF, 0);
+        struct termios actual_term_set;
+        tcgetattr(0, &actual_term_set);
+        actual_term_set.c_lflag |= ISIG;
+        actual_term_set.c_lflag |= ICANON;
+        tcsetattr(0, TCSANOW, &actual_term_set);
+
+        char buf[10] = {};
+        read(0, buf, 10);
+
+        int actual_num = atoi(buf);
+
+        if (actual_num < MEMORY_MAX_CELL_VALUE
+            && actual_num >= MEMORY_MIN_CELL_VALUE) {
+            sc_memorySet(instruction_counter, actual_num);
+        }
+
+        setvbuf(stdout, NULL, _IONBF, 0);
+        setvbuf(stdin, NULL, _IONBF, 0);
+
+        close(term);
+    } else if (*k == F5) {
+        int term = open(TERM_PATH, O_WRONLY);
+
+        if (term == FAIL || isatty(term) == 0) {
+            fprintf(stderr, FAIL_OPEN_TERM);
+            exit(FAIL);
+        }
+
+        setvbuf(stdout, NULL, _IONBF, 0);
+        struct termios actual_term_set;
+        tcgetattr(0, &actual_term_set);
+        actual_term_set.c_lflag |= ISIG;
+        actual_term_set.c_lflag |= ICANON;
+        tcsetattr(0, TCSANOW, &actual_term_set);
+
+        write(0, NEWLINE, sizeof(NEWLINE));
+        write(0, MSG_INPUT_NUM, sizeof(MSG_INPUT_NUM));
+
+        char buf[10] = {};
+
+        read(0, buf, 10);
+
+        __int16_t tmp_accum = atoi(buf);
+
+        if (tmp_accum < MEMORY_MAX_CELL_VALUE
+            && tmp_accum >= MEMORY_MIN_CELL_VALUE) {
+            accumulator = tmp_accum;
+        }
+
+        setvbuf(stdout, NULL, _IONBF, 0);
+        setvbuf(stdin, NULL, _IONBF, 0);
+
+        close(term);
+    }
+}
 
 void interface()
 {
@@ -384,8 +456,10 @@ void interface()
 
     sc_memoryInit();
 
+    enum keys* k = malloc(sizeof(enum keys));
+
     while (1) {
-        enum keys READABLE_KEYS;
+        *k = OTHER;
 
         mt_clrscr();
         output_memory_in_box(1, 1, 10, 60);
@@ -399,48 +473,8 @@ void interface()
 
         mt_gotoXX(23, 15);
 
-        rk_readkey(&READABLE_KEYS);
-
-        if (READABLE_KEYS == RIGHT) {
-            instruction_counter += 1;
-        } else if (READABLE_KEYS == LEFT) {
-            instruction_counter -= 1;
-        } else if (READABLE_KEYS == DOWN) {
-            instruction_counter += 10;
-        } else if (READABLE_KEYS == UP) {
-            instruction_counter -= 10;
-        } else if (READABLE_KEYS == ENTER) {
-            int term = open(TERM_PATH, O_WRONLY);
-
-            if (term == FAIL || isatty(term) == 0) {
-                fprintf(stderr, "FAIL OPENING TERMINAL");
-                exit(FAIL);
-            }
-
-            write(0, "\nInput num: ", sizeof("\nInput num: "));
-
-            setvbuf(stdout, NULL, _IONBF, 0);
-
-            struct termios actual_term_set;
-
-            tcgetattr(0, &actual_term_set);
-
-            actual_term_set.c_lflag |= ISIG;
-            actual_term_set.c_lflag |= ICANON;
-
-            tcsetattr(0, TCSANOW, &actual_term_set);
-
-            char buf[6] = {};
-            read(0, buf, 6);
-
-            int actual_num = atoi(buf);
-
-            if (actual_num < 0x3fff && actual_num > 0x0) {
-                sc_memorySet(instruction_counter, actual_num);
-            }
-
-            close(term);
-        }
+        rk_readkey(k);
+        process_key(k);
 
         if (instruction_counter > 99) {
             instruction_counter = 0;

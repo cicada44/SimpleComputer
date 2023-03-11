@@ -3,8 +3,7 @@
 
 #pragma once
 
-// All readable characters.
-
+// Readable characters.
 enum keys {
     LOAD,
     SAVE,

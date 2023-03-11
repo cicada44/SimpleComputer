@@ -20,6 +20,8 @@
 #define MIN_MEMORY_ADDRESS 0
 #define MAX_MEMORY_ADDRESS 99
 #define DEFAULT_MEMORY_VALUE 0
+#define MEMORY_MAX_CELL_VALUE 0x3fff
+#define MEMORY_MIN_CELL_VALUE 0x0
 
 // OUTPUT
 #define TITLE_MEMORY " Memory "
@@ -76,3 +78,7 @@
 #define MINUS "-"
 
 #define PLUS "+"
+
+// Fails.
+
+#define FAIL_OPEN_TERM "[E] FAIL OPENING TERMINAL"

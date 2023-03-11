@@ -1,5 +1,9 @@
 #pragma once
 
+#include <libreadkey/readkey.h>
+
+#define MSG_INPUT_NUM "> "
+
 // Big character.
 typedef struct NUM {
     int N[2];
@@ -64,3 +68,6 @@ int print_MC();
 
 /* Draw all interface frontend. */
 void interface();
+
+/* Processes the entered character. */
+void process_key(enum keys* k);
