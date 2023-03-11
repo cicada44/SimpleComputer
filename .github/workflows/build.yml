@@ -10,7 +10,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Check codestyle
-        run: git ls-files *.{c,h} ! -name '*ctest.h' | xargs clang-format --style Google -i --verbose && git diff --exit-code
+        run: git ls-files *.{c,h} | xargs clang-format -i && git diff --exit-code
 
       - name: Build application
         run: make
