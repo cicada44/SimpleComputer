@@ -1,8 +1,8 @@
 #include <SimpleComputer/front.h>
-#include <common/common.h>
 #include <ctype.h>
 #include <fcntl.h>
 #include <libbigchar/bigchar.h>
+#include <libcommon/common.h>
 #include <libcomputer/comp.h>
 #include <libreadkey/readkey.h>
 #include <libterm/term.h>
@@ -13,6 +13,31 @@
 #include <sys/ioctl.h>
 #include <termios.h>
 #include <unistd.h>
+
+// Big character.
+typedef struct NUM {
+    int N[2];
+} NUM;
+
+static NUM NUMS[]
+        = {/* + */ {.N[0] = 0xFF181818, .N[1] = 0x181818FF},
+           /* - */ {.N[0] = 0xFF000000, .N[1] = 0x000000FF},
+           /* 0 */ {.N[0] = 0x8181817e, .N[1] = 0x7e818181},
+           /* 1 */ {.N[0] = 0x8890A0C0, .N[1] = 0x80808080},
+           /* 2 */ {.N[0] = 0x2040827C, .N[1] = 0xFE040810},
+           /* 3 */ {.N[0] = 0x6080817E, .N[1] = 0x7E818060},
+           /* 4 */ {.N[0] = 0xFF818181, .N[1] = 0x80808080},
+           /* 5 */ {.N[0] = 0x7F0101FF, .N[1] = 0x7F808080},
+           /* 6 */ {.N[0] = 0x0101817E, .N[1] = 0x7E81817F},
+           /* 7 */ {.N[0] = 0x204080FE, .N[1] = 0x02040810},
+           /* 8 */ {.N[0] = 0x7E81817E, .N[1] = 0x7E818181},
+           /* 9 */ {.N[0] = 0x7E81817E, .N[1] = 0x7E808080},
+           /* A */ {.N[0] = 0x7E42423C, .N[1] = 0x42424242},
+           /* B */ {.N[0] = 0x3E42423E, .N[1] = 0x3E424242},
+           /* C */ {.N[0] = 0x0101017E, .N[1] = 0x7E010101},
+           /* D */ {.N[0] = 0x4242221E, .N[1] = 0x1E224242},
+           /* E */ {.N[0] = 0x7E02027E, .N[1] = 0x7E020202},
+           /* F */ {.N[0] = 0x7E02027E, .N[1] = 0x02020202}};
 
 // Computer accumulator.
 static __int16_t accumulator = 0;
@@ -46,14 +71,14 @@ int output_memory_in_box(int x1, int y1, int x2, int y2)
     // Goto next line...
     ++x1;
 
-    for (__uint8_t i = MIN_MEMORY_ADDRESS; i != MEMORY_SIZE / 10; ++i) {
+    for (__uint8_t i = MEMORY_MIN_ADDRESS; i != MEMORY_SIZE / 10; ++i) {
         // Goto next line...
         if (mt_gotoXX(x1++, y1 + 1) == FAIL) {
             return FAIL;
         }
 
         // Print row of RAM.
-        for (int j = MIN_MEMORY_ADDRESS; j != MEMORY_SIZE / 10; ++j) {
+        for (int j = MEMORY_MIN_ADDRESS; j != MEMORY_SIZE / 10; ++j) {
             if (sc_memoryGet(i * (MEMORY_SIZE / 10) + j, tval) == FAIL) {
                 return FAIL;
             }
@@ -373,6 +398,19 @@ int print_MC(int n)
     return SUCCESS;
 }
 
+void reset()
+{
+    for (size_t i = 0; i != MEMORY_SIZE; ++i) {
+        sc_memorySet(i, MEMORY_DEFAULT_VALUE);
+    }
+
+    sc_regSet(FLAG_OVERFLOW_N, FLAG_DEFAULT_VALUE);
+    sc_regSet(FLAG_NULL_DIV_N, FLAG_DEFAULT_VALUE);
+    sc_regSet(FLAG_UNK_COMMAND_N, FLAG_DEFAULT_VALUE);
+    sc_regSet(FLAG_IGNORE_N, FLAG_DEFAULT_VALUE);
+    sc_regSet(FLAG_OUT_OF_MEM_N, FLAG_DEFAULT_VALUE);
+}
+
 void process_key(enum keys* k)
 {
     if (*k == RIGHT) {
@@ -384,14 +422,9 @@ void process_key(enum keys* k)
     } else if (*k == UP) {
         instruction_counter -= 10;
     } else if (*k == ENTER) {
-        int term = open(TERM_PATH, O_WRONLY);
+        int term = mt_open();
 
-        if (term == FAIL || isatty(term) == 0) {
-            fprintf(stderr, FAIL_OPEN_TERM);
-            exit(FAIL);
-        }
-
-        write(0, MSG_INPUT_NUM, sizeof(MSG_INPUT_NUM));
+        write(0, MSG_INPUT, sizeof(MSG_INPUT));
 
         setvbuf(stdout, NULL, _IONBF, 0);
         struct termios actual_term_set;
@@ -415,12 +448,7 @@ void process_key(enum keys* k)
 
         close(term);
     } else if (*k == F5) {
-        int term = open(TERM_PATH, O_WRONLY);
-
-        if (term == FAIL || isatty(term) == 0) {
-            fprintf(stderr, FAIL_OPEN_TERM);
-            exit(FAIL);
-        }
+        int term = mt_open();
 
         setvbuf(stdout, NULL, _IONBF, 0);
         struct termios actual_term_set;
@@ -430,7 +458,7 @@ void process_key(enum keys* k)
         tcsetattr(0, TCSANOW, &actual_term_set);
 
         write(0, NEWLINE, sizeof(NEWLINE));
-        write(0, MSG_INPUT_NUM, sizeof(MSG_INPUT_NUM));
+        write(0, MSG_INPUT, sizeof(MSG_INPUT));
 
         char buf[10] = {};
 
@@ -445,6 +473,78 @@ void process_key(enum keys* k)
 
         setvbuf(stdout, NULL, _IONBF, 0);
         setvbuf(stdin, NULL, _IONBF, 0);
+
+        close(term);
+    } else if (*k == F6) {
+        int term = mt_open();
+
+        setvbuf(stdout, NULL, _IONBF, 0);
+        struct termios actual_term_set;
+        tcgetattr(0, &actual_term_set);
+        actual_term_set.c_lflag |= ISIG;
+        actual_term_set.c_lflag |= ICANON;
+        tcsetattr(0, TCSANOW, &actual_term_set);
+
+        write(0, NEWLINE, sizeof(NEWLINE));
+        write(0, MSG_INPUT, sizeof(MSG_INPUT));
+
+        char buf[10] = {};
+
+        read(0, buf, 10);
+
+        __int16_t new_instr_cnter = atoi(buf);
+
+        if (new_instr_cnter < MEMORY_MAX_ADDRESS
+            && new_instr_cnter >= MEMORY_MIN_ADDRESS) {
+            instruction_counter = new_instr_cnter;
+        }
+
+        setvbuf(stdout, NULL, _IONBF, 0);
+        setvbuf(stdin, NULL, _IONBF, 0);
+
+        close(term);
+    } else if (*k == RESET) {
+        reset();
+    } else if (*k == LOAD) {
+        int term = mt_open();
+
+        setvbuf(stdout, NULL, _IONBF, 0);
+        struct termios actual_term_set;
+        tcgetattr(0, &actual_term_set);
+        actual_term_set.c_lflag |= ISIG;
+        actual_term_set.c_lflag |= ICANON;
+        tcsetattr(0, TCSANOW, &actual_term_set);
+
+        write(0, NEWLINE, sizeof(NEWLINE));
+        write(0, MSG_INPUT, sizeof(MSG_INPUT));
+
+        char file_name[FILE_NAME_MAX_LEN] = {};
+
+        read(0, file_name, FILE_NAME_MAX_LEN);
+
+        rk_termrestore(file_name);
+
+        // rk_termsave(file_name);
+
+        close(term);
+    } else if (*k == SAVE) {
+        int term = mt_open();
+
+        setvbuf(stdout, NULL, _IONBF, 0);
+        struct termios actual_term_set;
+        tcgetattr(0, &actual_term_set);
+        actual_term_set.c_lflag |= ISIG;
+        actual_term_set.c_lflag |= ICANON;
+        tcsetattr(0, TCSANOW, &actual_term_set);
+
+        write(0, NEWLINE, sizeof(NEWLINE));
+        write(0, MSG_INPUT, sizeof(MSG_INPUT));
+
+        char file_name[FILE_NAME_MAX_LEN] = {};
+
+        read(0, file_name, FILE_NAME_MAX_LEN);
+
+        rk_termsave(file_name);
 
         close(term);
     }
@@ -482,8 +582,7 @@ void interface()
             instruction_counter = 99;
         }
 
-        // Memory cell number.
-        int* n = malloc(sizeof(*n));
+        int* n = malloc(sizeof(*n)); /* Memory cell number. */
         sc_memoryGet(instruction_counter, n);
         if (*n >> 13 == 0) {
             actual_operation = *n;

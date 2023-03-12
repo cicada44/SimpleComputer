@@ -1,6 +1,6 @@
-#include <common/common.h>
 #include <fcntl.h>
 #include <libbigchar/bigchar.h>
+#include <libcommon/common.h>
 #include <libcomputer/comp.h>
 #include <libterm/term.h>
 #include <stdio.h>
@@ -204,14 +204,14 @@ int bc_printbigchar(
     for (int i = 0; i != BC_NUM; i++) {
         for (int k = 0; k != sizeof(int); ++k) {
             mt_gotoXX(x++, y);
-            for (int rad = 0; rad != BITS_IN_BYTE; ++rad) {
-                int val = a[i] & ONE_BIT;
-                if (val == ONE_BIT) {
+            for (int rad = 0; rad != BIT_S_IN_BYTE; ++rad) {
+                int val = a[i] & BIT_ONE;
+                if (val == BIT_ONE) {
                     bc_printA(RECT);
                 } else {
                     bc_printES(1);
                 }
-                a[i] >>= MIN_SHIFT;
+                a[i] >>= SHIFT_MIN;
             }
             bc_printNL();
         }
@@ -226,33 +226,33 @@ int bc_setbigcharpos(int* big, int x, int y, int value)
 {
     if (big == NULL || x < MIN_LINE_N || x > MAX_LINE_N || y < MIN_LINE_N
         || y > MAX_LINE_N
-        || (value != FALSE_BIT_VALUE && value != TRUE_BIT_VALUE)) {
+        || (value != BIT_FALSE_VALUE && value != BIT_TRUE_VALUE)) {
         return FAIL;
     }
 
     // Char in the 1-4 lines.
     if (x < (MAX_LINE_N / 2 + 1)) {
         // Sets 1 or 0.
-        (value == ONE_BIT)
+        (value == BIT_ONE)
                 ? (big[BC_FIRST_N]
-                   |= (MIN_SHIFT
-                       << ((BITS_IN_BYTE * (x - SHIFT_DIFF) + y) - MIN_SHIFT)))
+                   |= (SHIFT_MIN
+                       << ((BIT_S_IN_BYTE * (x - SHIFT_DIFF) + y) - SHIFT_MIN)))
                 : (big[BC_FIRST_N]
-                   &= (~(MIN_SHIFT
-                         << (((BITS_IN_BYTE * (x - SHIFT_DIFF) + y))
-                             - MIN_SHIFT))));
+                   &= (~(SHIFT_MIN
+                         << (((BIT_S_IN_BYTE * (x - SHIFT_DIFF) + y))
+                             - SHIFT_MIN))));
     }
     // Char in the 5-8 lines.
     else {
         // Sets 1 or 0.
-        (value == ONE_BIT)
+        (value == BIT_ONE)
                 ? (big[BC_SECOND_N]
-                   |= (MIN_SHIFT
-                       << ((BITS_IN_BYTE * (x - SHIFT_DIFF) + y) - MIN_SHIFT)))
+                   |= (SHIFT_MIN
+                       << ((BIT_S_IN_BYTE * (x - SHIFT_DIFF) + y) - SHIFT_MIN)))
                 : (big[BC_SECOND_N]
-                   &= (~(MIN_SHIFT
-                         << (((BITS_IN_BYTE * (x - SHIFT_DIFF) + y))
-                             - MIN_SHIFT))));
+                   &= (~(SHIFT_MIN
+                         << (((BIT_S_IN_BYTE * (x - SHIFT_DIFF) + y))
+                             - SHIFT_MIN))));
     }
 
     return SUCCESS;
@@ -270,12 +270,12 @@ int bc_getbigcharpos(int* big, int x, int y, int* value)
 
     if (x < MAX_LINE_N / 2 + 1) {
         *value = (big[BC_FIRST_N]
-                  >> ((BITS_IN_BYTE * (x - SHIFT_DIFF) + y) - MIN_SHIFT))
-                & ONE_BIT;
+                  >> ((BIT_S_IN_BYTE * (x - SHIFT_DIFF) + y) - SHIFT_MIN))
+                & BIT_ONE;
     } else {
         *value = (big[BC_SECOND_N]
-                  >> ((BITS_IN_BYTE * (x - SHIFT_DIFF) + y) - MIN_SHIFT))
-                & ONE_BIT;
+                  >> ((BIT_S_IN_BYTE * (x - SHIFT_DIFF) + y) - SHIFT_MIN))
+                & BIT_ONE;
     }
 
     return SUCCESS;

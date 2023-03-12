@@ -1,6 +1,6 @@
-#include <common/common.h>
 #include <fcntl.h>
 #include <libbigchar/bigchar.h>
+#include <libcommon/common.h>
 #include <libcomputer/comp.h>
 #include <libreadkey/readkey.h>
 #include <libterm/term.h>
@@ -29,12 +29,7 @@
 
 int rk_readkey(enum keys* k)
 {
-    int term = open(TERM_PATH, O_WRONLY);
-
-    if (term == FAIL || isatty(term) == 0) {
-        fprintf(stderr, "FAIL OPENING TERMINAL");
-        exit(FAIL);
-    }
+    int term = mt_open();
 
     // Modifying terminal.
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -83,19 +78,16 @@ int rk_readkey(enum keys* k)
     return FAIL;
 }
 
-int rk_termsave()
+int rk_termsave(const char* const file_name)
 {
     FILE* termstate_f;
 
-    int term = open(TERM_PATH, O_WRONLY);
+    int term = mt_open();
 
-    if (term == FAIL || isatty(term) == 0) {
-        return FAIL;
-    }
-
-    termstate_f = fopen(TERM_STATE_FILE, WRITE_BIN);
+    termstate_f = fopen(file_name, WRITE_BIN);
 
     if (termstate_f == NULL) {
+        runtime_error_process(RE.ERROR_OPENING_FILE);
         close(term);
         return FAIL;
     }
@@ -103,8 +95,112 @@ int rk_termsave()
     struct termios actual_term_set;
 
     if (fwrite(&actual_term_set, sizeof(actual_term_set), 1, termstate_f)
-        != sizeof(actual_term_set)) {
+        != 1) {
+        fclose(termstate_f);
         close(term);
+        return FAIL;
+    }
+
+    fclose(termstate_f);
+
+    close(term);
+
+    return SUCCESS;
+}
+
+int rk_termrestore(const char* const file_name)
+{
+    FILE* termstate_f;
+
+    int term = open(TERM_PATH, O_WRONLY);
+
+    if (term == FAIL || isatty(term) == 0) {
+        runtime_error_process(RE.ERROR_OPENING_TERM);
+        exit(FAIL);
+    }
+
+    termstate_f = fopen(file_name, READ_BIN);
+
+    if (termstate_f == NULL) {
+        runtime_error_process(RE.ERROR_OPENING_FILE);
+        close(term);
+        return FAIL;
+    }
+
+    struct termios actual_term_set;
+
+    if (fread(&actual_term_set, sizeof(actual_term_set), 1, termstate_f) != 1) {
+        fclose(termstate_f);
+        close(term);
+        return FAIL;
+    }
+
+    tcsetattr(0, TCSANOW, &actual_term_set);
+
+    fclose(termstate_f);
+
+    close(term);
+
+    return SUCCESS;
+}
+
+// int setopt(int opt, ) {}
+
+int rk_mytermregime(int regime, int vtime, int vmin, int echo, int sigint)
+{
+    int term = open(TERM_PATH, O_WRONLY);
+
+    if (term == FAIL || isatty(term) == 0) {
+        runtime_error_process(RE.ERROR_OPENING_TERM);
+        exit(FAIL);
+    }
+
+    struct termios actual_term;
+
+    tcgetattr(0, &actual_term);
+
+    if (regime == 0) {
+        actual_term.c_lflag &= ~ICANON;
+    } else if (regime == 1) {
+        actual_term.c_lflag |= ICANON;
+
+        if (vtime == 1) {
+            actual_term.c_lflag |= VTIME;
+        } else if (vtime == 0) {
+            actual_term.c_lflag &= ~VTIME;
+        } else {
+            runtime_error_process(RE.ERROR_TERM_OPT);
+            return FAIL;
+        }
+
+        if (vmin == 1)
+            actual_term.c_lflag |= VMIN;
+        else if (vmin == 0) {
+            actual_term.c_lflag &= ~VMIN;
+        } else {
+            runtime_error_process(RE.ERROR_TERM_OPT);
+            return FAIL;
+        }
+
+        if (echo == 1)
+            actual_term.c_lflag |= ECHO;
+        else if (echo == 0)
+            actual_term.c_lflag &= ~ECHO;
+        else {
+            runtime_error_process(RE.ERROR_TERM_OPT);
+            return FAIL;
+        }
+
+        if (sigint == 1)
+            actual_term.c_lflag |= ISIG;
+        else if (sigint == 0)
+            actual_term.c_lflag &= ~ISIG;
+        else {
+            runtime_error_process(RE.ERROR_TERM_OPT);
+            return FAIL;
+        }
+    } else {
+        runtime_error_process(RE.ERROR_TERM_OPT);
         return FAIL;
     }
 

@@ -24,10 +24,10 @@ enum keys {
 int rk_readkey(enum keys* k);
 
 /* Save actual terminal settings. */
-int rk_termsave();
+int rk_termsave(const char* const file_name);
 
 /* Load actual terminal settings. */
-int rk_termrestore();
+int rk_termrestore(const char* const file_name);
 
 /* Switch between terminal states. */
 int rk_mytermregime(int regime, int vtime, int vmin, int echo, int sigint);

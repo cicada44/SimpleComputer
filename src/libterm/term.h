@@ -1,12 +1,17 @@
 /*  Library for working with terminal.
-    All functions return SUCCESS or FAIL (defined in common.h).  */
+ *  All functions except mt_open return SUCCESS or FAIL (defined in common.h).
+ */
 
 #pragma once
 
 // Color codes for terminal.
 enum color { BLACK = 30, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE };
 
-/* Cleares the console */
+/* Open standard system terminal. Returns terminal descriptor number.
+   If there isn't any openable temrinal in system - terminate with code -1. */
+int mt_open();
+
+/* Clears the console */
 int mt_clrscr();
 
 /* Sets cursor to (x, y) position. */

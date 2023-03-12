@@ -1,16 +1,15 @@
-#include <common/common.h>
+#include <libcommon/common.h>
 #include <libcomputer/comp.h>
 #include <search.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#define ZERO_BIT 0x0
 #define MASK_DECODE_COMMAND 0x7f
 
-// Flag register.
-static int flags = 0;
+/* Flag register. */
+static int flags;
 
-// RAM.
+/* Virtual RAM. */
 static __int16_t* memory = NULL;
 
 // Commands.
@@ -25,11 +24,8 @@ int sc_memoryInit()
     memory = calloc(MEMORY_SIZE, sizeof(int));
 
     if (memory == NULL) {
-        return FAIL;
-    }
-
-    for (int x = MIN_MEMORY_ADDRESS; x != MEMORY_SIZE; ++x) {
-        sc_memorySet(x, DEFAULT_MEMORY_VALUE);
+        runtime_error_process(RE.ERROR_MEM_INIT);
+        exit(FAIL);
     }
 
     return SUCCESS;
@@ -37,8 +33,9 @@ int sc_memoryInit()
 
 int sc_memorySet(int address, int value)
 {
-    if (address < MIN_MEMORY_ADDRESS || address > MAX_MEMORY_ADDRESS) {
-        sc_regSet(FLAG_OUT_OF_MEM_N, ONE_BIT);
+    if (address < MEMORY_MIN_ADDRESS || address > MEMORY_MAX_ADDRESS) {
+        sc_regSet(FLAG_OUT_OF_MEM_N, BIT_ONE);
+        runtime_error_process(RE.ERROR_MEM_SET);
         return FAIL;
     }
 
@@ -49,9 +46,10 @@ int sc_memorySet(int address, int value)
 
 int sc_memoryGet(int address, int* value)
 {
-    if (value == NULL || address < MIN_MEMORY_ADDRESS
-        || address > MAX_MEMORY_ADDRESS) {
-        sc_regSet(FLAG_OUT_OF_MEM_N, ONE_BIT);
+    if (value == NULL || address < MEMORY_MIN_ADDRESS
+        || address > MEMORY_MAX_ADDRESS || memory == NULL) {
+        sc_regSet(FLAG_OUT_OF_MEM_N, BIT_ONE);
+        runtime_error_process(RE.ERROR_MEM_GET);
         return FAIL;
     }
 
@@ -65,11 +63,14 @@ int sc_memorySave(char* filename)
     FILE* output_file = fopen(filename, WRITE_BIN);
 
     if (output_file == NULL || memory == NULL) {
+        (output_file == NULL) ? runtime_error_process(RE.ERROR_OPENING_FILE)
+                              : runtime_error_process(RE.ERROR_MEM_INIT);
         return FAIL;
     }
 
     if (fwrite(memory, sizeof(int), MEMORY_SIZE, output_file) != MEMORY_SIZE) {
         fclose(output_file);
+        runtime_error_process(RE.ERROR_FILE_READING);
         return FAIL;
     }
 
@@ -83,11 +84,14 @@ int sc_memoryLoad(char* filename)
     FILE* input_file = fopen(filename, READ_BIN);
 
     if (input_file == NULL || memory == NULL) {
+        (input_file == NULL) ? runtime_error_process(RE.ERROR_OPENING_FILE)
+                             : runtime_error_process(RE.ERROR_MEM_INIT);
         return FAIL;
     }
 
     if (fread(memory, sizeof(int), MEMORY_SIZE, input_file) != MEMORY_SIZE) {
         fclose(input_file);
+        runtime_error_process(RE.ERROR_FILE_READING);
         return FAIL;
     }
 
@@ -105,12 +109,13 @@ int sc_regInit()
 int sc_regSet(int reg, int value)
 {
     if (reg < MIN_REGISTER_NUM || reg > MAX_REGISTER_NUM
-        || (value != FALSE_BIT_VALUE && value != TRUE_BIT_VALUE)) {
+        || (value != BIT_FALSE_VALUE && value != BIT_TRUE_VALUE)) {
+        runtime_error_process(RE.ERROR_REG_SET);
         return FAIL;
     }
 
-    (value == ONE_BIT) ? (flags |= (MIN_SHIFT << (reg - MIN_SHIFT)))
-                       : (flags &= (~(MIN_SHIFT << (reg - MIN_SHIFT))));
+    (value == BIT_ONE) ? (flags |= (SHIFT_MIN << (reg - SHIFT_MIN)))
+                       : (flags &= (~(SHIFT_MIN << (reg - SHIFT_MIN))));
 
     return SUCCESS;
 }
@@ -118,10 +123,11 @@ int sc_regSet(int reg, int value)
 int sc_regGet(int reg, int* value)
 {
     if (reg < MIN_REGISTER_NUM || reg > MAX_REGISTER_NUM || value == NULL) {
+        runtime_error_process(RE.ERROR_MEM_GET);
         return FAIL;
     }
 
-    *value = (flags >> (reg - MIN_SHIFT)) & ONE_BIT;
+    *value = (flags >> (reg - SHIFT_MIN)) & BIT_ONE;
 
     return SUCCESS;
 }
@@ -136,11 +142,11 @@ int sc_commandEncode(int command, int operand, int* value)
                 == NULL
         || operand > MAX_COMMAND_OPERATOR_VALUE
         || command > MAX_COMMAND_OPERATOR_VALUE || value == NULL) {
+        runtime_error_process(RE.ERROR_COMMAND_ENCODE);
         return FAIL;
     }
 
-    *value = ZERO_BIT;
-
+    *value = BIT_ZERO;
     *value = command << SHIFT_DECODE;
     *value |= operand;
 
@@ -150,11 +156,12 @@ int sc_commandEncode(int command, int operand, int* value)
 int sc_commandDecode(int value, int* command, int* operand)
 {
     if (command == NULL || operand == NULL) {
-        sc_regSet(FLAG_UNK_COMMAND_N, TRUE_BIT_VALUE);
+        sc_regSet(FLAG_UNK_COMMAND_N, BIT_TRUE_VALUE);
+        runtime_error_process(RE.ERROR_COMMAND_DECODE);
         return FAIL;
     }
 
-    *operand = *command = ZERO_BIT;
+    *operand = *command = BIT_ZERO;
 
     *operand = value & MASK_DECODE_COMMAND;
     value >>= SHIFT_DECODE;
@@ -166,6 +173,7 @@ int sc_commandDecode(int value, int* command, int* operand)
 int sc_memoryDelete()
 {
     if (memory == NULL) {
+        runtime_error_process(RE.ERROR_MEM_INIT);
         return FAIL;
     }
     free(memory);
