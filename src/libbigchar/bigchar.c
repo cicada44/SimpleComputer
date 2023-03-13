@@ -8,7 +8,7 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
-// Extended ascii chars.
+/* Extended ascii chars. */
 #define RECT "a"
 #define HR "q"
 #define VT_BOUND "x"
@@ -17,28 +17,24 @@
 #define LU "l"
 #define LB "m"
 
-// 1st and 2nd ints in bigchar array.
+/* 1st and 2nd ints in bigchar array. */
 #define BC_FIRST_N 0
 #define BC_SECOND_N 1
 
-// Min line number in bigchar array.
+/* Min line number in bigchar array. */
 #define MIN_LINE_N 1
-// Max line number in bigchar array.
+/* Max line number in bigchar array. */
 #define MAX_LINE_N 8
 
-// Prints newline.
 int bc_printNL()
 {
-    // Turn off buffering.
-    setvbuf(stdout, NULL, _IONBF, 0);
+    int term = mt_open();
 
-    int term = open(TERM_PATH, O_WRONLY);
-
-    if (term == FAIL) {
+    if (write(term, NEWLINE, strlen(NEWLINE)) == FAIL) {
+        runtime_error_process(RE.ERROR_ANY_BC);
+        close(term);
         return FAIL;
     }
-
-    write(term, NEWLINE, strlen(NEWLINE));
 
     close(term);
 
@@ -47,20 +43,17 @@ int bc_printNL()
 
 int bc_printA(char* str)
 {
-    // Turn off buffering.
-    setvbuf(stdout, NULL, _IONBF, 0);
-
-    int term = open(TERM_PATH, O_WRONLY);
-
-    if (term == FAIL) {
-        return FAIL;
-    }
+    int term = mt_open();
 
     char buf[strlen(str)];
 
     sprintf(buf, "\e(0%s\e(B", str);
 
-    write(term, buf, strlen("\e(0%s\e(B"));
+    if (write(term, buf, strlen("\e(0%s\e(B")) == FAIL) {
+        runtime_error_process(RE.ERROR_ANY_BC);
+        close(term);
+        return FAIL;
+    }
 
     close(term);
 
@@ -70,20 +63,26 @@ int bc_printA(char* str)
 int bc_printUB(int len)
 {
     if (bc_printA(LU) == FAIL) {
+        runtime_error_process(RE.ERROR_ANY_BC);
         return FAIL;
     }
 
     for (int i = 0; i != len; ++i) {
         if (bc_printA(HR) == FAIL) {
+            runtime_error_process(RE.ERROR_ANY_BC);
             return FAIL;
         }
     }
 
     if (bc_printA(RU) == FAIL) {
+        runtime_error_process(RE.ERROR_ANY_BC);
         return FAIL;
     }
 
-    bc_printNL();
+    if (bc_printNL() == FAIL) {
+        runtime_error_process(RE.ERROR_ANY_BC);
+        return FAIL;
+    }
 
     return SUCCESS;
 }
@@ -91,28 +90,36 @@ int bc_printUB(int len)
 int bc_printLB(int len)
 {
     if (bc_printA(LB) == FAIL) {
+        runtime_error_process(RE.ERROR_ANY_BC);
         return FAIL;
     }
 
     for (int i = 0; i != len; ++i) {
         if (bc_printA(HR) == FAIL) {
             return FAIL;
+            runtime_error_process(RE.ERROR_ANY_BC);
         }
     }
+
     if (bc_printA(RB) == FAIL) {
+        runtime_error_process(RE.ERROR_ANY_BC);
         return FAIL;
     }
 
-    bc_printNL();
+    if (bc_printNL() == FAIL) {
+        runtime_error_process(RE.ERROR_ANY_BC);
+        return FAIL;
+    }
 
     return SUCCESS;
 }
 
 int bc_printES(int len)
 {
-    int term = open(TERM_PATH, O_WRONLY);
+    int term = mt_open();
 
     if (term == FAIL) {
+        runtime_error_process(RE.ERROR_ANY_BC);
         return FAIL;
     }
 
@@ -127,24 +134,24 @@ int bc_printES(int len)
 
 int bc_box(int x1, int y1, int x2, int y2)
 {
-    // Turn off buffering.
-    setvbuf(stdout, NULL, _IONBF, 0);
+    setvbuf(stdout, NULL, _IONBF, 0); /* Turn off buffering. */
 
     if (x1 < 0 || y1 < 0 || x2 < 0 || y2 < 0) {
+        runtime_error_process(RE.ERROR_ANY_BC);
         return FAIL;
     }
 
     if (mt_gotoXX(x1, y1) == FAIL) {
+        runtime_error_process(RE.ERROR_ANY_BC);
         return FAIL;
     }
 
-    // Print upper bound.
     if (bc_printUB(y2) == FAIL) {
+        runtime_error_process(RE.ERROR_ANY_BC);
         return FAIL;
-    }
+    } /* Print upper bound. */
 
-    // Goto next line...
-    ++x1;
+    ++x1; /* Goto next line... */
 
     for (int i = 0; i != x2; ++i) {
         mt_gotoXX(x1++, y1);
@@ -162,13 +169,11 @@ int bc_box(int x1, int y1, int x2, int y2)
         bc_printNL();
     }
 
-    // Goto last line...
-    mt_gotoXX(x1++, y1);
+    mt_gotoXX(x1++, y1); /* Goto last line... */
 
-    // Print bottom bound.
     if (bc_printLB(y2) == FAIL) {
         return FAIL;
-    }
+    } /* Print bottom bound. */
 
     return SUCCESS;
 }
@@ -176,28 +181,16 @@ int bc_box(int x1, int y1, int x2, int y2)
 int bc_printbigchar(
         int a_main[BC_NUM], int x, int y, enum color c_front, enum color c_back)
 {
-    // Copy? Cause can't past in function BY THE VALUE!!!
+    int term = mt_open();
+
+    /* Copy? Cause can't past in function BY THE VALUE!!! */
     int a[BC_NUM];
     a[BC_FIRST_N] = a_main[BC_FIRST_N];
     a[BC_SECOND_N] = a_main[BC_SECOND_N];
 
-    setvbuf(stdout, NULL, _IONBF, 0);
-
-    int term = open(TERM_PATH, O_WRONLY);
-
-    if (term == FAIL || isatty(term) == 0) {
-        return FAIL;
-    }
-
-    if (mt_setbgcolor(c_back) == FAIL) {
-        return FAIL;
-    }
-
-    if (mt_setbgcolor(c_front) == FAIL) {
-        return FAIL;
-    }
-
-    if (mt_gotoXX(x, y) == FAIL) {
+    if (mt_setbgcolor(c_back) == FAIL || mt_setbgcolor(c_front) == FAIL
+        || mt_gotoXX(x, y) == FAIL) {
+        runtime_error_process(RE.ERROR_ANY_BC);
         return FAIL;
     }
 
@@ -227,13 +220,12 @@ int bc_setbigcharpos(int* big, int x, int y, int value)
     if (big == NULL || x < MIN_LINE_N || x > MAX_LINE_N || y < MIN_LINE_N
         || y > MAX_LINE_N
         || (value != BIT_FALSE_VALUE && value != BIT_TRUE_VALUE)) {
+        runtime_error_process(RE.ERROR_ANY_BC);
         return FAIL;
     }
 
-    // Char in the 1-4 lines.
-    if (x < (MAX_LINE_N / 2 + 1)) {
-        // Sets 1 or 0.
-        (value == BIT_ONE)
+    if (x < (MAX_LINE_N / 2 + 1)) { /* Char in the 1-4 lines. */
+        (value == BIT_ONE)          /* Sets 1 or 0. */
                 ? (big[BC_FIRST_N]
                    |= (SHIFT_MIN
                        << ((BIT_S_IN_BYTE * (x - SHIFT_DIFF) + y) - SHIFT_MIN)))
@@ -242,10 +234,9 @@ int bc_setbigcharpos(int* big, int x, int y, int value)
                          << (((BIT_S_IN_BYTE * (x - SHIFT_DIFF) + y))
                              - SHIFT_MIN))));
     }
-    // Char in the 5-8 lines.
-    else {
-        // Sets 1 or 0.
-        (value == BIT_ONE)
+
+    else {                 /* Char in the 5-8 lines. */
+        (value == BIT_ONE) /* Sets 1 or 0. */
                 ? (big[BC_SECOND_N]
                    |= (SHIFT_MIN
                        << ((BIT_S_IN_BYTE * (x - SHIFT_DIFF) + y) - SHIFT_MIN)))
@@ -265,14 +256,15 @@ int bc_getbigcharpos(int* big, int x, int y, int* value)
         if (value != NULL) {
             *value = 0;
         }
+        runtime_error_process(RE.ERROR_ANY_BC);
         return FAIL;
     }
 
-    if (x < MAX_LINE_N / 2 + 1) {
+    if (x < MAX_LINE_N / 2 + 1) { /* 1-4 lines. */
         *value = (big[BC_FIRST_N]
                   >> ((BIT_S_IN_BYTE * (x - SHIFT_DIFF) + y) - SHIFT_MIN))
                 & BIT_ONE;
-    } else {
+    } else { /* 5-8 lines. */
         *value = (big[BC_SECOND_N]
                   >> ((BIT_S_IN_BYTE * (x - SHIFT_DIFF) + y) - SHIFT_MIN))
                 & BIT_ONE;
@@ -284,10 +276,12 @@ int bc_getbigcharpos(int* big, int x, int y, int* value)
 int bc_bigcharwrite(int fd, int* big, int count)
 {
     if (big == NULL || count < 1) {
+        runtime_error_process(RE.ERROR_ANY_BC);
         return FAIL;
     }
 
-    if (write(fd, big, sizeof(int) * BC_NUM * count) == -1) {
+    if (write(fd, big, sizeof(int) * BC_NUM * count) == FAIL) {
+        runtime_error_process(RE.ERROR_ANY_BC);
         return FAIL;
     }
 
@@ -300,10 +294,12 @@ int bc_bigcharread(int fd, int* big, int need_count, int* count)
         if (count != NULL) {
             *count = 0;
         }
+        runtime_error_process(RE.ERROR_ANY_BC);
         return FAIL;
     }
 
     if (read(fd, big, need_count * sizeof(int) * 2) == FAIL) {
+        runtime_error_process(RE.ERROR_ANY_BC);
         return FAIL;
     }
 

@@ -17,7 +17,11 @@ struct RUNTIME_ERRORS RE
            .ERROR_REG_SET = "[E] ERROR SETTING REGISTER",
            .ERROR_COMMAND_DECODE = "[E] ERROR COMMAND DECODE",
            .ERROR_COMMAND_ENCODE = "[E] ERROR COMMAND ENCODE",
-           .ERROR_ANY_TERM = "[E] ERROR TERMINAL"};
+           .ERROR_ANY_TERM = "[E] ERROR TERMINAL",
+           .ERROR_ANY_BC = "[E] ERROR BIG CHARACTER",
+           .ERROR_READING_KEY = "[E] ERROR READING KEY",
+           .ERROR_FILE_WRITING = "[E] ERROR FILE WRITING",
+           .ERROR_TERMINAL_INTERFACE = "[E] ERROR TERMINAL INTERFACE"};
 
 void runtime_error_process(const char* const error_msg)
 {

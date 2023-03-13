@@ -31,7 +31,7 @@ int rk_readkey(enum keys* k)
 {
     int term = mt_open();
 
-    // Modifying terminal.
+    /* Modifying terminal. */
     setvbuf(stdout, NULL, _IONBF, 0);
     struct termios actual_term_set;
     tcgetattr(0, &actual_term_set);
@@ -42,7 +42,7 @@ int rk_readkey(enum keys* k)
     char buf[BUF_SIZE];
     read(0, buf, sizeof(buf));
 
-    // Check the containing key.
+    /* Check the containing key. */
     char key = buf[0];
 
     if (key == 'l') {
@@ -97,6 +97,7 @@ int rk_termsave(const char* const file_name)
     if (fwrite(&actual_term_set, sizeof(actual_term_set), 1, termstate_f)
         != 1) {
         fclose(termstate_f);
+        runtime_error_process(RE.ERROR_FILE_WRITING);
         close(term);
         return FAIL;
     }
@@ -110,14 +111,9 @@ int rk_termsave(const char* const file_name)
 
 int rk_termrestore(const char* const file_name)
 {
+    int term = mt_open();
+
     FILE* termstate_f;
-
-    int term = open(TERM_PATH, O_WRONLY);
-
-    if (term == FAIL || isatty(term) == 0) {
-        runtime_error_process(RE.ERROR_OPENING_TERM);
-        exit(FAIL);
-    }
 
     termstate_f = fopen(file_name, READ_BIN);
 
@@ -131,6 +127,7 @@ int rk_termrestore(const char* const file_name)
 
     if (fread(&actual_term_set, sizeof(actual_term_set), 1, termstate_f) != 1) {
         fclose(termstate_f);
+        runtime_error_process(RE.ERROR_FILE_READING);
         close(term);
         return FAIL;
     }
@@ -144,7 +141,7 @@ int rk_termrestore(const char* const file_name)
     return SUCCESS;
 }
 
-// int setopt(int opt, ) {}
+// int setopt(int opt, ) {}     
 
 int rk_mytermregime(int regime, int vtime, int vmin, int echo, int sigint)
 {

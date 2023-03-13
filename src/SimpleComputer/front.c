@@ -14,10 +14,9 @@
 #include <termios.h>
 #include <unistd.h>
 
-// Big character.
 typedef struct NUM {
     int N[2];
-} NUM;
+} NUM; /* Big character. */
 
 static NUM NUMS[]
         = {/* + */ {.N[0] = 0xFF181818, .N[1] = 0x181818FF},
@@ -39,65 +38,70 @@ static NUM NUMS[]
            /* E */ {.N[0] = 0x7E02027E, .N[1] = 0x7E020202},
            /* F */ {.N[0] = 0x7E02027E, .N[1] = 0x02020202}};
 
-// Computer accumulator.
+/* Computer accumulator. */
 static __int16_t accumulator = 0;
 
-// Computer instruction counter.
+/* Computer instruction counter. */
 static __uint8_t instruction_counter = 0;
 
-// Actual operation.
+/* Actual operation. */
 static __int16_t actual_operation = 0;
-
-// Actual memory pointer.
-// static __uint8_t instruction_counter = 0;
 
 int output_memory_in_box(int x1, int y1, int x2, int y2)
 {
-    // Turn off buffering.
-    setvbuf(stdout, NULL, _IONBF, 0);
-
-    int term = open(TERM_PATH, O_WRONLY);
-
-    if (term == FAIL) {
-        return FAIL;
-    }
+    int term = mt_open();
 
     char buf[BUF_SIZE] = {};
 
     bc_box(x1, y1, x2, y2);
 
-    int* tval = malloc(sizeof(int));
+    __int16_t tval = 0;
 
-    // Goto next line...
-    ++x1;
+    ++x1; /* Goto next line... */
 
     for (__uint8_t i = MEMORY_MIN_ADDRESS; i != MEMORY_SIZE / 10; ++i) {
-        // Goto next line...
         if (mt_gotoXX(x1++, y1 + 1) == FAIL) {
             return FAIL;
-        }
+        } /* Goto next line... */
 
-        // Print row of RAM.
-        for (int j = MEMORY_MIN_ADDRESS; j != MEMORY_SIZE / 10; ++j) {
-            if (sc_memoryGet(i * (MEMORY_SIZE / 10) + j, tval) == FAIL) {
+        for (int j = MEMORY_MIN_ADDRESS; j != MEMORY_SIZE / 10;
+             ++j) { /* Print row of RAM. */
+            if (sc_memoryGet(i * (MEMORY_SIZE / 10) + j, &tval) == FAIL) {
+                runtime_error_process(RE.ERROR_MEM_GET);
+                close(term);
                 return FAIL;
             }
 
-            if (i * (MEMORY_SIZE / 10) + j == instruction_counter) {
+            if (i * (MEMORY_SIZE / 10) + j
+                == instruction_counter) { /* Setting solor for instruction
+                                             counter output. */
                 mt_setfgcolor(BLACK);
                 mt_setbgcolor(WHITE);
             }
 
-            if (*tval >> 13 == 1) {
+            if (tval >> 14 == 1) { /* Output value. */
                 write(term, "-", 2);
-                // *tval >>= 1;
             } else {
                 write(term, "+", 2);
             }
 
-            sprintf(buf, "%04X", *tval);
+            tval >>= 1;
+            // sprintf(buf, "%04X", tval);
+            // } else { /* Output command. */
 
-            write(term, buf, sizeof(buf));
+            __int8_t command = 0;
+            __int8_t operand = 0;
+
+            sc_commandDecode(tval, &command, &operand);
+            // write(term, "+", 2);
+            sprintf(buf, "%02X%02X", command, operand);
+            // }
+
+            if (write(term, buf, sizeof(buf)) == FAIL) {
+                runtime_error_process(RE.ERROR_TERMINAL_INTERFACE);
+                close(term);
+                return FAIL;
+            }
 
             if (i * (MEMORY_SIZE / 10) + j == instruction_counter) {
                 mt_resetcolor();
@@ -111,11 +115,12 @@ int output_memory_in_box(int x1, int y1, int x2, int y2)
         bc_printNL();
     }
 
-    free(tval);
-
-    mt_gotoXX(1, 30);
-
-    write(term, TITLE_MEMORY, sizeof(TITLE_MEMORY));
+    if (mt_gotoXX(1, 30) == FAIL
+        || write(term, TITLE_MEMORY, sizeof(TITLE_MEMORY)) == FAIL) {
+        runtime_error_process(RE.ERROR_TERMINAL_INTERFACE);
+        close(term);
+        return FAIL;
+    }
 
     close(term);
 
@@ -124,16 +129,9 @@ int output_memory_in_box(int x1, int y1, int x2, int y2)
 
 int output_accum()
 {
+    int term = mt_open();
+
     if (bc_box(1, 63, 1, 20) == FAIL) {
-        return FAIL;
-    }
-
-    // Turn off buffering.
-    setvbuf(stdout, NULL, _IONBF, 0);
-
-    int term = open(TERM_PATH, O_WRONLY);
-
-    if (term == FAIL || isatty(term) == 0) {
         return FAIL;
     }
 
@@ -217,26 +215,23 @@ int output_operation()
 
     char buf[BUF_SIZE] = {};
 
-    int* command = malloc(sizeof(int));
-    int* operand = malloc(sizeof(int));
+    __int8_t command = 0;
+    __int8_t operand = 0;
 
-    sc_commandDecode(actual_operation, command, operand);
+    sc_commandDecode(actual_operation, &command, &operand);
 
-    sprintf(buf, "%02X : %02X", *command, *operand);
+    sprintf(buf, "%02X : %02X", command, operand);
 
     mt_gotoXX(8, 69);
 
     if ((actual_operation & 0x4000) >> 14 == 1) {
         write(term, MINUS, sizeof(MINUS));
-        instruction_counter >>= 1;
+        // instruction_counter >>= 1;
     } else {
         write(term, PLUS, sizeof(PLUS));
     }
 
     write(term, buf, BUF_SIZE);
-
-    free(command);
-    free(operand);
 
     close(term);
 
@@ -261,29 +256,27 @@ int output_flags()
     mt_gotoXX(10, 70);
     write(term, TITLE_FLAGS, sizeof(TITLE_FLAGS));
 
-    int* value = malloc(sizeof(int));
+    __int8_t value;
 
     mt_gotoXX(11, 69);
-    sc_regGet(FLAG_OVERFLOW_N, value);
-    write(term, ((*value) ? FLAG_OVERFLOW : ""), 1);
+    sc_regGet(FLAG_OVERFLOW_N, &value);
+    write(term, ((value) ? FLAG_OVERFLOW : ""), 1);
 
     mt_gotoXX(11, 71);
-    sc_regGet(FLAG_NULL_DIV_N, value);
-    write(term, ((*value) ? FLAG_NULL_DIV : ""), 1);
+    sc_regGet(FLAG_NULL_DIV_N, &value);
+    write(term, ((value) ? FLAG_NULL_DIV : ""), 1);
 
     mt_gotoXX(11, 73);
-    sc_regGet(FLAG_UNK_COMMAND_N, value);
-    write(term, ((*value) ? FLAG_UNK_COMMAND : ""), 1);
+    sc_regGet(FLAG_UNK_COMMAND_N, &value);
+    write(term, ((value) ? FLAG_UNK_COMMAND : ""), 1);
 
     mt_gotoXX(11, 75);
-    sc_regGet(FLAG_IGNORE_N, value);
-    write(term, ((*value) ? FLAG_IGNORE : ""), 1);
+    sc_regGet(FLAG_IGNORE_N, &value);
+    write(term, ((value) ? FLAG_IGNORE : ""), 1);
 
     mt_gotoXX(11, 77);
-    sc_regGet(FLAG_OUT_OF_MEM_N, value);
-    write(term, ((*value) ? FLAG_OUT_OF_MEM : ""), 1);
-
-    free(value);
+    sc_regGet(FLAG_OUT_OF_MEM_N, &value);
+    write(term, ((value) ? FLAG_OUT_OF_MEM : ""), 1);
 
     close(term);
 
@@ -379,21 +372,33 @@ int print_MC(int n)
 {
     bc_box(13, 1, 8, 44);
 
-    int* num = malloc(sizeof(int));
-    sc_memoryGet(n, num);
+    __int16_t num = 0;
+    sc_memoryGet(n, &num);
 
-    if (*num >> 13 == 1) {
-        print_mem_cell_sign(NUMS[1]);
-    } else {
+    if (num >> 14 == 0) {
         print_mem_cell_sign(NUMS[0]);
+    } else {
+        print_mem_cell_sign(NUMS[1]);
     }
 
-    print_mem_cell_4(NUMS[(*num & 0xf) + 2]);
-    print_mem_cell_3(NUMS[((*num >> 4) & 0xf) + 2]);
-    print_mem_cell_2(NUMS[((*num >> 8) & 0xf) + 2]);
-    print_mem_cell_1(NUMS[((*num >> 12) & 0xf) + 2]);
+    num >>= 1;
 
-    free(num);
+    __int8_t command = 0, operand = 0;
+
+    sc_commandDecode(num, &command, &operand);
+
+    print_mem_cell_4(NUMS[(operand & 0xf) + 2]);
+    print_mem_cell_3(NUMS[((operand >> 4) & 0xf) + 2]);
+    print_mem_cell_2(NUMS[(command & 0xf) + 2]);
+    print_mem_cell_1(NUMS[((command >> 4) & 0xf) + 2]);
+    // } else {
+    //     print_mem_cell_sign(NUMS[1]);
+
+    //     print_mem_cell_4(NUMS[(num & 0xf) + 2]);
+    //     print_mem_cell_3(NUMS[((num >> 4) & 0xf) + 2]);
+    //     print_mem_cell_2(NUMS[((num >> 8) & 0xf) + 2]);
+    //     print_mem_cell_1(NUMS[((num >> 12) & 0xf) + 2]);
+    // }
 
     return SUCCESS;
 }
@@ -409,6 +414,9 @@ void reset()
     sc_regSet(FLAG_UNK_COMMAND_N, FLAG_DEFAULT_VALUE);
     sc_regSet(FLAG_IGNORE_N, FLAG_DEFAULT_VALUE);
     sc_regSet(FLAG_OUT_OF_MEM_N, FLAG_DEFAULT_VALUE);
+
+    accumulator = 0;
+    instruction_counter = 0;
 }
 
 void process_key(enum keys* k)
@@ -438,7 +446,7 @@ void process_key(enum keys* k)
 
         int actual_num = atoi(buf);
 
-        if (actual_num < MEMORY_MAX_CELL_VALUE
+        if (actual_num <= MEMORY_MAX_CELL_VALUE
             && actual_num >= MEMORY_MIN_CELL_VALUE) {
             sc_memorySet(instruction_counter, actual_num);
         }
@@ -555,6 +563,7 @@ void interface()
     int current_command = 0;
 
     sc_memoryInit();
+    sc_regInit();
 
     enum keys* k = malloc(sizeof(enum keys));
 
@@ -582,11 +591,15 @@ void interface()
             instruction_counter = 99;
         }
 
-        int* n = malloc(sizeof(*n)); /* Memory cell number. */
-        sc_memoryGet(instruction_counter, n);
-        if (*n >> 13 == 0) {
-            actual_operation = *n;
+        __int16_t n = 0; /* Memory cell number. */
+        sc_memoryGet(instruction_counter, &n);
+        if (n >> 14 == 0) {
+            actual_operation = n;
             output_operation();
+            sc_regSet(FLAG_UNK_COMMAND_N, BIT_ZERO);
+        } else {
+            sc_regSet(FLAG_UNK_COMMAND_N, BIT_ONE);
+            sc_regSet(FLAG_IGNORE_N, BIT_ONE);
         }
     }
 
