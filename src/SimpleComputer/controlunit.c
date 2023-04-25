@@ -297,6 +297,24 @@ void CU_detect_n_execute_program(
                 accumulator = value;
             } else if (command == 0x21) /* STORE */ {
                 sc_memorySet(operand, accumulator);
+            } else if (command == 0x40) /* JUMP */ {
+                __int16_t val;
+                sc_memoryGet(operand, &val);
+                instruction_counter = val;
+            } else if (command == 0x41) /* JNEG */ {
+                if (accumulator >> 14 == 1) {
+                    __int16_t val;
+                    sc_memoryGet(operand, &val);
+                    instruction_counter = val;
+                }
+            } else if (command == 0x42) /* JZ */ {
+                if (accumulator >> 14 == 0) {
+                    __int16_t val;
+                    sc_memoryGet(operand, &val);
+                    instruction_counter = val;
+                }
+            } else if (command == 0x43) /* HALT */ {
+                sc_regSet(FLAG_IGNORE_N, BIT_ONE);
             }
         }
     } else {
