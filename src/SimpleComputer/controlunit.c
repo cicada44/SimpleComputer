@@ -196,9 +196,13 @@ void CU_process_key(enum keys* k)
             }
             break;
         case LOAD:
+            buf[strlen(buf) - 1] = '\0';
+            // buf[strlen(buf)] = ' ';
             sc_memoryLoad(buf);
             break;
         case SAVE:
+            buf[strlen(buf) - 1] = '\0';
+            // buf[strlen(buf)] = ' ';
             sc_memorySave(buf);
             break;
         default:

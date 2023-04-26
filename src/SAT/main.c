@@ -24,12 +24,20 @@ int main(int argc, char* argv[])
 
     __int16_t command_code = 0, operand = 0, mem_cell = 0;
     char command_name[10] = {};
-    // __int16_t mem_dump[MEMORY_SIZE] = {};
+    __int16_t mem_dump[MEMORY_SIZE] = {};
 
     for (unsigned int current_string = 0; current_string != strnum;
          ++current_string) {
         sat_read_next_obj(F_source, &mem_cell, command_name, &operand);
-        sat_encode_command(command_name, &command_code);
-        sat_write_next_obj(F_out, mem_cell, command_code, operand);
+        sat_encode_command(command_name, &command_code, F_source, operand);
+        sat_write_next_obj(
+                F_out,
+                current_string,
+                command_code,
+                operand,
+                &mem_dump[current_string]);
+        printf("%X\n", mem_dump[current_string]);
     }
+
+    fwrite(mem_dump, sizeof(__int16_t), MEMORY_SIZE, F_out);
 }

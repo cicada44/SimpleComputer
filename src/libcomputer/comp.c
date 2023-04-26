@@ -12,13 +12,6 @@ static int flags;
 /* Virtual RAM. */
 static __int16_t* memory = NULL;
 
-// Commands.
-static int commands[] = {
-        10, 11, 20, 21, 30, 31, 32, 33, 40, 41, 42, 43, 51,
-        52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64,
-        65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76,
-};
-
 int sc_memoryInit()
 {
     memory = calloc(MEMORY_SIZE, sizeof(int));
@@ -67,7 +60,8 @@ int sc_memorySave(char* filename)
         return FAIL;
     }
 
-    if (fwrite(memory, sizeof(int), MEMORY_SIZE, output_file) != MEMORY_SIZE) {
+    if (fwrite(memory, sizeof(__int16_t), MEMORY_SIZE, output_file)
+        != MEMORY_SIZE) {
         fclose(output_file);
         runtime_error_process(RE.ERROR_FILE_READING);
         return FAIL;
@@ -88,7 +82,8 @@ int sc_memoryLoad(char* filename)
         return FAIL;
     }
 
-    if (fread(memory, sizeof(int), MEMORY_SIZE, input_file) != MEMORY_SIZE) {
+    if (fread(memory, sizeof(__int16_t), MEMORY_SIZE, input_file)
+        != MEMORY_SIZE) {
         fclose(input_file);
         runtime_error_process(RE.ERROR_FILE_READING);
         return FAIL;
@@ -133,17 +128,6 @@ int sc_regGet(__int8_t reg, __int8_t* value)
 
 int sc_commandEncode(__int8_t command, __int8_t operand, __int16_t* value)
 {
-    if (bsearch(&command,
-                commands,
-                sizeof(commands) / sizeof(commands[0]),
-                sizeof(commands[0]),
-                comp)
-                == NULL
-        || value == NULL) {
-        // runtime_error_process(RE.ERROR_COMMAND_ENCODE);
-        return FAIL;
-    }
-
     *value = BIT_ZERO;
     *value = command << SHIFT_DECODE;
     *value |= operand;

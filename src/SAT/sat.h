@@ -19,11 +19,13 @@ void sat_read_next_obj(
         FILE* source, __int16_t* mem_cell, char* command, __int16_t* operand);
 
 /* Encode command to binary. */
-void sat_encode_command(const char* name, __int16_t* code);
+void sat_encode_command(
+        const char* name, __int16_t* code, FILE* f, __int16_t operand);
 
 /* Write command into output file. */
 void sat_write_next_obj(
         FILE* file,
         __int16_t mem_cell,
         __int16_t command_code,
-        __int16_t operand);
+        __int16_t operand,
+        __int16_t* mem_ptr);

@@ -51,12 +51,11 @@ void sat_read_next_obj(
     fscanf(source, "%s", command);
     fscanf(source, "%hd", operand);
 
-    // printf("%d %s %d\n", *mem_cell, command, *operand);
-
     sat_goto_next_str(source);
 }
 
-void sat_encode_command(const char* name, __int16_t* code)
+void sat_encode_command(
+        const char* name, __int16_t* code, FILE* f, __int16_t operand)
 {
     if (!strcmp(name, "READ")) {
         *code = 0x10;
@@ -85,7 +84,7 @@ void sat_encode_command(const char* name, __int16_t* code)
     } else if (!strcmp(name, "SUB")) {
         *code = 0x10;
     } else if (!strcmp(name, "=")) {
-        /* TODO */
+        fwrite(&operand, sizeof(operand), 1, f);
     } else {
         fprintf(stderr, "[E] Unknown command, exiting...\n");
         exit(-1);
@@ -93,13 +92,13 @@ void sat_encode_command(const char* name, __int16_t* code)
 }
 
 void sat_write_next_obj(
-        FILE* file,
+        __attribute_maybe_unused__ FILE* file,
         __attribute_maybe_unused__ __int16_t mem_cell,
         __int16_t command_code,
-        __int16_t operand)
+        __int16_t operand,
+        __int16_t* mem_ptr)
 {
     __int16_t operation;
     sc_commandEncode(command_code, operand, &operation);
-    printf("%hd%hd\n", command_code, operand);
-    fwrite(&operation, sizeof(operation), 1, file);
+    *mem_ptr = operation;
 }
