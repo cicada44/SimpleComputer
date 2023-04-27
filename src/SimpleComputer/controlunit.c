@@ -157,8 +157,6 @@ void CU_process_key(enum keys* k)
                 actual_num = strtol(buf, NULL, 16);
             }
 
-            // __int16_t actual_num = strtol(buf, NULL, 16);
-
             if (minus_flag == 1) {
                 actual_num |= 0x4000;
             }
@@ -306,10 +304,10 @@ void CU_detect_n_execute_program(
                 sc_memoryGet(operand, &val);
                 instruction_counter = val;
             } else if (command == 0x41) /* JNEG */ {
-                if (accumulator >> 14 == 1) {
-                    __int16_t val;
-                    sc_memoryGet(operand, &val);
-                    instruction_counter = val;
+                if (accumulator & 0x3fff) {
+                    // __int16_t val;
+                    // sc_memoryGet(operand, &val);
+                    instruction_counter = operand;
                 }
             } else if (command == 0x42) /* JZ */ {
                 if (accumulator >> 14 == 0) {

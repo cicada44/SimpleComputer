@@ -36,7 +36,6 @@ int main(int argc, char* argv[])
                 command_code,
                 operand,
                 &mem_dump[current_string]);
-        printf("%X\n", mem_dump[current_string]);
     }
 
     fwrite(mem_dump, sizeof(__int16_t), MEMORY_SIZE, F_out);

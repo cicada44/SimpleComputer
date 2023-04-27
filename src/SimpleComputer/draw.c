@@ -101,20 +101,22 @@ int output_accum()
     mt_gotoXX(1, 67);
     write(term, TITLE_ACCUM, sizeof(TITLE_ACCUM));
 
-    int accum_value = accumulator;
+    __int16_t accum_value = accumulator;
 
     mt_gotoXX(2, 71);
 
-    if (accum_value >> 14 == 1) { /* Output value. */
+    if (accum_value & 0x4000) { /* Output value. */
         write(term, "-", 2);
     } else {
         write(term, "+", 2);
     }
 
-    accum_value &= 0x3fff;
+    if (accum_value < 0) {
+        accum_value = abs(accum_value);
+    }
 
     char buf[16] = {};
-    sprintf(buf, "%04X", accum_value);
+    sprintf(buf, "%04X", accum_value & 0x3fff);
     write(term, buf, BUF_SIZE);
 
     close(term);
