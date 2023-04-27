@@ -18,7 +18,7 @@ int mt_clrscr();
 int mt_gotoXX(int x, int y);
 
 /* Gets actual terminal size and writes (x, y) to (rows, cols). */
-int mt_getscreensize(int *rows, int *cols);
+int mt_getscreensize(int* rows, int* cols);
 
 /* Sets foreground terminal color. */
 int mt_setfgcolor(enum color c);

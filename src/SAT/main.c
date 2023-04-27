@@ -29,7 +29,11 @@ int main(int argc, char* argv[])
     for (unsigned int current_string = 0; current_string != strnum;
          ++current_string) {
         sat_read_next_obj(F_source, &mem_cell, command_name, &operand);
-        sat_encode_command(command_name, &command_code, F_source, operand);
+        sat_encode_command(
+                command_name,
+                &command_code,
+                &mem_dump[current_string],
+                operand);
         sat_write_next_obj(
                 F_out,
                 current_string,

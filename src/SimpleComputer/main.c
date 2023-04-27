@@ -4,4 +4,7 @@
 #include <libterm/term.h>
 #include <stdio.h>
 
-int main(void) { interface(); }
+int main(void)
+{
+    interface();
+}

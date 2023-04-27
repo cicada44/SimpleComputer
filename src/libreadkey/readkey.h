@@ -5,19 +5,19 @@
 
 // Readable characters.
 enum keys {
-  LOAD,
-  SAVE,
-  RUN,
-  STEP,
-  RESET,
-  F5,
-  F6,
-  UP,
-  DOWN,
-  LEFT,
-  RIGHT,
-  ENTER,
-  OTHER
+    LOAD,
+    SAVE,
+    RUN,
+    STEP,
+    RESET,
+    F5,
+    F6,
+    UP,
+    DOWN,
+    LEFT,
+    RIGHT,
+    ENTER,
+    OTHER
 };
 
 /* Read sequence from terminal and write first pressed key to k.  */

@@ -20,7 +20,10 @@ void sat_read_next_obj(
 
 /* Encode command to binary. */
 void sat_encode_command(
-        const char* name, __int16_t* code, FILE* f, __int16_t operand);
+        const char* name,
+        __int16_t* code,
+        __int16_t* mem_cell,
+        __int16_t operand);
 
 /* Write command into output file. */
 void sat_write_next_obj(

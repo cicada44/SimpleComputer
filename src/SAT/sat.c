@@ -5,6 +5,7 @@
 #include <assert.h>
 
 #include <SAT/sat.h>
+#include <libcommon/common.h>
 #include <string.h>
 
 #include <libcomputer/comp.h>
@@ -49,13 +50,25 @@ void sat_read_next_obj(
 {
     fscanf(source, "%hd", mem_cell);
     fscanf(source, "%s", command);
-    fscanf(source, "%hd", operand);
+
+    !strcmp(command, "=") ? fscanf(source, "%hx", operand)
+                          : fscanf(source, "%hd", operand);
+
+    if (*operand < 0) {
+        *operand = abs(*operand);
+        *operand |= (SHIFT_MIN << (15 - SHIFT_MIN));
+    }
+
+    printf("operand - %x\n", *operand);
 
     sat_goto_next_str(source);
 }
 
 void sat_encode_command(
-        const char* name, __int16_t* code, FILE* f, __int16_t operand)
+        const char* name,
+        __int16_t* code,
+        __int16_t* mem_cell,
+        __int16_t operand)
 {
     if (!strcmp(name, "READ")) {
         *code = 0x10;
@@ -84,7 +97,8 @@ void sat_encode_command(
     } else if (!strcmp(name, "SUB")) {
         *code = 0x10;
     } else if (!strcmp(name, "=")) {
-        fwrite(&operand, sizeof(operand), 1, f);
+        *mem_cell = operand;
+        *code = 0x0;
     } else {
         fprintf(stderr, "[E] Unknown command, exiting...\n");
         exit(-1);
@@ -98,7 +112,9 @@ void sat_write_next_obj(
         __int16_t operand,
         __int16_t* mem_ptr)
 {
-    __int16_t operation;
-    sc_commandEncode(command_code, operand, &operation);
-    *mem_ptr = operation;
+    if (command_code != 0x0) {
+        __int16_t operation;
+        sc_commandEncode(command_code, operand, &operation);
+        *mem_ptr = operation;
+    }
 }
