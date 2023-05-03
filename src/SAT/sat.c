@@ -59,7 +59,8 @@ void sat_read_next_obj(
         *operand |= (SHIFT_MIN << (15 - SHIFT_MIN));
     }
 
-    printf("operand - %x\n", *operand);
+    // printf("operand - %x\n", *operand);
+    printf("cell - %d\n", *mem_cell);
 
     sat_goto_next_str(source);
 }
