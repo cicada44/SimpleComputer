@@ -13,7 +13,7 @@ void sbt_open_file(
 unsigned int sbt_get_fstr(FILE* f);
 
 /* String main process function. */
-void sbt_process_str(FILE* f, FILE* out, int number_of_out_str, char* str);
+void sbt_process_str(FILE* f, FILE* out, int* number_of_out_str, char* str);
 
 /* Returns number of char in str. */
 int sbt_get_char(const char* str, char c);

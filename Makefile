@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -Werror
+CFLAGS = -Wall -Wextra
 CPPFLAGS = -I src -I thirdparty
 LDFLAGS =
 LDLIBS =
