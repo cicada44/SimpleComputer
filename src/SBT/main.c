@@ -24,7 +24,10 @@ int main(int argc, char* argv[])
     for (int i = 0; i != file_str_num; ++i) {
         fgets(actual_str, sizeof(actual_str), F_source);
         sbt_process_str(F_source, F_out, &num_of_out_str, actual_str);
-
-        // ++num_of_out_str;
     }
+
+    fclose(F_source);
+    fclose(F_out);
+
+    printf("END OF TRANSLATION\n");
 }

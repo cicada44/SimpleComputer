@@ -17,3 +17,9 @@ void sbt_process_str(FILE* f, FILE* out, int* number_of_out_str, char* str);
 
 /* Returns number of char in str. */
 int sbt_get_char(const char* str, char c);
+
+/* Processes INPUT command. */
+void sbt_command_input(FILE* out_file, int* number_of_out_str);
+
+/* Processes WRITE command. */
+void sbt_command_print(FILE* out_file, int* number_of_out_str);
