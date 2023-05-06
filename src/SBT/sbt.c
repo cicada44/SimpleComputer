@@ -99,6 +99,11 @@ void sbt_command_goto(FILE* out_file, int* number_of_out_str)
             atoi(strtok(NULL, "\n")));
 }
 
+void sbt_command_end(FILE* out_file, int* number_of_out_str)
+{
+    fprintf(out_file, "%02d HALT 00", (*number_of_out_str)++);
+}
+
 void sbt_process_str(
         __attribute_maybe_unused__ FILE* f,
         __attribute_maybe_unused__ FILE* out_file,
@@ -121,6 +126,8 @@ void sbt_process_str(
         sbt_command_print(out_file, number_of_out_str);
     } else if (!strcmp(first_cmd_word, "GOTO")) {
         sbt_command_goto(out_file, number_of_out_str);
+    } else if (!strcmp(first_cmd_word, "END")) {
+        sbt_command_end(out_file, number_of_out_str);
     } else {
         free(main_command);
         free(first_cmd_word);

@@ -141,8 +141,8 @@ void CU_process_key(enum keys* k)
         actual_term_set.c_lflag |= ICANON;
         tcsetattr(0, TCSANOW, &actual_term_set);
 
-        char buf[10] = {};
-        read(0, buf, 10);
+        char buf[255] = {};
+        read(0, buf, 255);
 
         switch (*k) {
         case ENTER:;
@@ -195,6 +195,8 @@ void CU_process_key(enum keys* k)
             break;
         case LOAD:
             buf[strlen(buf) - 1] = '\0';
+            // printf("%s\n", buf);
+            // exit(-1);
             // buf[strlen(buf)] = ' ';
             sc_memoryLoad(buf);
             break;
