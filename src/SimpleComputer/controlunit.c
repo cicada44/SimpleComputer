@@ -300,9 +300,9 @@ void CU_detect_n_execute_program(
             } else if (command == 0x21) /* STORE */ {
                 sc_memorySet(operand, accumulator);
             } else if (command == 0x40) /* JUMP */ {
-                __int16_t val;
-                sc_memoryGet(operand, &val);
-                instruction_counter = val;
+                // __int16_t val;
+                // sc_memoryGet(operand, &val);
+                instruction_counter = operand;
             } else if (command == 0x41) /* JNEG */ {
                 if (accumulator & 0x3fff) {
                     // __int16_t val;

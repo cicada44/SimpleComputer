@@ -85,16 +85,18 @@ void sbt_command_input(FILE* out_file, int* number_of_out_str)
 
 void sbt_command_print(FILE* out_file, int* number_of_out_str)
 {
-    char operand[1];
-
-    strcpy(operand, strtok(NULL, "\n"));
-
-    printf("%s\n", operand);
-
     fprintf(out_file,
             "%02d WRITE %02d",
             (*number_of_out_str)++,
-            sbt_get_variable_pos(operand));
+            sbt_get_variable_pos(strtok(NULL, "\n")));
+}
+
+void sbt_command_goto(FILE* out_file, int* number_of_out_str)
+{
+    fprintf(out_file,
+            "%02d JUMP %02d",
+            (*number_of_out_str)++,
+            atoi(strtok(NULL, "\n")));
 }
 
 void sbt_process_str(
@@ -117,6 +119,8 @@ void sbt_process_str(
         sbt_command_input(out_file, number_of_out_str);
     } else if (!strcmp(first_cmd_word, "PRINT")) {
         sbt_command_print(out_file, number_of_out_str);
+    } else if (!strcmp(first_cmd_word, "GOTO")) {
+        sbt_command_goto(out_file, number_of_out_str);
     } else {
         free(main_command);
         free(first_cmd_word);
