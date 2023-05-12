@@ -1,5 +1,5 @@
 CC = gcc
-PP = g++ 
+PP = g++ -O0 -g
 CFLAGS = -Wall -Wextra
 CPPFLAGS = -I src -I thirdparty
 LDFLAGS =

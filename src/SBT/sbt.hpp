@@ -35,4 +35,33 @@ void process_let(std::fstream& out_file, std::stringstream& ss);
 /* Processes GOTO command. */
 void process_goto(std::fstream& out_file, std::stringstream& ss);
 
+int check_priority(const std::string& s);
+
+/* Returns RPN expression. */
+std::string RPN_translate(std::stringstream& ss);
+
+void add_number(std::fstream& f, const std::string& str);
+
+void write_left(std::fstream& f);
+
+/* Processes IF command. */
+void process_if(std::fstream& out_file, std::stringstream& ss);
+
+void process_if_equal(
+        const std::string& o1,
+        const std::string& o2,
+        const std::string& operation,
+        std::fstream& f,
+        std::string act_after_if);
+void process_if_greater(
+        const std::string& o1,
+        const std::string& o2,
+        const std::string& operation,
+        std::fstream& f);
+void process_if_less(
+        const std::string& o1,
+        const std::string& o2,
+        const std::string& operation,
+        std::fstream& f);
+
 }

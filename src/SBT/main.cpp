@@ -21,6 +21,7 @@ int main(int argc, char* argv[])
     while (std::getline(F_source, inputable, '\n')) {
         sbt::process_next_str(F_out, inputable);
     }
+    sbt::write_left(F_out);
 
     F_source.close();
     F_out.close();

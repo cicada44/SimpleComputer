@@ -15,8 +15,7 @@
 void sat_goto_next_str(FILE* f)
 {
     char c;
-    while ((c = fgetc(f)) != '\n') {
-    }
+    while ((c = fgetc(f)) != '\n') {}
 }
 
 unsigned int sat_get_fstr(FILE* f)
@@ -25,9 +24,7 @@ unsigned int sat_get_fstr(FILE* f)
     char c;
     while (!feof(f)) {
         c = fgetc(f);
-        if (c == '\n') {
-            ++strnum;
-        }
+        if (c == '\n') { ++strnum; }
     }
 
     fseek(f, 0, SEEK_SET);
@@ -35,8 +32,7 @@ unsigned int sat_get_fstr(FILE* f)
     return strnum;
 }
 
-void sat_open_file(
-        const char* source, const char* out, FILE** f_source, FILE** f_out)
+void sat_open_file(const char* source, const char* out, FILE** f_source, FILE** f_out)
 {
     *f_source = fopen(source, "r");
     *f_out = fopen(out, "wb");
@@ -45,31 +41,24 @@ void sat_open_file(
     assert(f_out != NULL);
 }
 
-void sat_read_next_obj(
-        FILE* source, __int16_t* mem_cell, char* command, __int16_t* operand)
+void sat_read_next_obj(FILE* source, __int16_t* mem_cell, char* command, __int16_t* operand)
 {
     fscanf(source, "%hd", mem_cell);
     fscanf(source, "%s", command);
 
-    !strcmp(command, "=") ? fscanf(source, "%hx", operand)
-                          : fscanf(source, "%hd", operand);
+    !strcmp(command, "=") ? fscanf(source, "%hx", operand) : fscanf(source, "%hd", operand);
 
     if (*operand < 0) {
         *operand = abs(*operand);
         *operand |= (SHIFT_MIN << (15 - SHIFT_MIN));
     }
 
-    // printf("operand - %x\n", *operand);
     printf("cell - %d\n", *mem_cell);
 
     sat_goto_next_str(source);
 }
 
-void sat_encode_command(
-        const char* name,
-        __int16_t* code,
-        __int16_t* mem_cell,
-        __int16_t operand)
+void sat_encode_command(const char* name, __int16_t* code, __int16_t* mem_cell, __int16_t operand)
 {
     if (!strcmp(name, "READ")) {
         *code = 0x10;
@@ -99,6 +88,7 @@ void sat_encode_command(
         *code = 0x10;
     } else if (!strcmp(name, "=")) {
         *mem_cell = operand;
+        printf("mem_cell - %d\n", operand);
         *code = 0x0;
     } else {
         fprintf(stderr, "[E] Unknown command, exiting...\n");
