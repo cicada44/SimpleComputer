@@ -5,13 +5,19 @@
 #include <cctype>
 #include <cstring>
 #include <fstream>
+#include <iostream>
 #include <iterator>
 #include <libcommon/common.h>
+#include <list>
 #include <map>
 #include <sstream>
 #include <stack>
 
 namespace sbt {
+
+std::map<int, int> adresses;
+
+std::list<int> wrong_adresses;
 
 std::string prev_command;
 
@@ -24,11 +30,7 @@ unsigned strpos;
 /* Position of next variable. */
 unsigned varpos = 99;
 
-void open_file(
-        const char* source,
-        const char* out,
-        std::fstream& f_source,
-        std::fstream& f_out)
+void open_file(const char* source, const char* out, std::fstream& f_source, std::fstream& f_out)
 {
     f_source.open(std::string(source));
     f_out.open(std::string(out));
@@ -38,10 +40,7 @@ void open_file(
 
 unsigned get_n_str(std::fstream& file)
 {
-    return std::count(
-            std::istreambuf_iterator<char>(file),
-            std::istreambuf_iterator<char>(),
-            '\n');
+    return std::count(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>(), '\n');
 }
 
 void process_input(std::fstream& f, std::stringstream& ss)
@@ -90,12 +89,9 @@ std::string RPN_translate(std::stringstream& ss)
                 pushable = helper_stack.top();
                 helper_stack.pop();
             } while (pushable != "(");
-        } else if (
-                tmp == "*" || tmp == "/" || tmp == "+"
-                || tmp == "-") {
+        } else if (tmp == "*" || tmp == "/" || tmp == "+" || tmp == "-") {
             if ((!helper_stack.empty())
-                && (check_priority(tmp)
-                    <= check_priority(helper_stack.top()))) {
+                && (check_priority(tmp) <= check_priority(helper_stack.top()))) {
                 final_expression.append(helper_stack.top());
                 final_expression.append(" ");
                 helper_stack.pop();
@@ -135,11 +131,11 @@ void process_let(std::fstream& out_file, std::stringstream& ss)
     std::stack<std::string> calc_stack;
     std::string tmp;
     while (calc_ss >> tmp) {
-        std::cout << "\n\nVARIABLES\n";
-        for (const auto& c : variables) {
-            std::cout << c.first << ' ' << c.second << '\n';
-        }
-        std::cout << '\n';
+        // std::cout << "\n\nVARIABLES\n";
+        // for (const auto& c : variables) {
+        //     std::cout << c.first << ' ' << c.second << '\n';
+        // }
+        // std::cout << '\n';
         if (tmp == "-" || tmp == "+" || tmp == "*" || tmp == "/") {
             std::string o1 = calc_stack.top();
             calc_stack.pop();
@@ -179,11 +175,9 @@ void process_let(std::fstream& out_file, std::stringstream& ss)
 
     if (calc_stack.size() > 0) {
         if (strpos < 10) out_file << '0';
-        out_file << strpos++ << " LOAD "
-                 << variables.at(calc_stack.top()) << '\n';
+        out_file << strpos++ << " LOAD " << variables.at(calc_stack.top()) << '\n';
         if (strpos < 10) out_file << '0';
-        out_file << strpos++ << " STORE " << variables.at(name)
-                 << '\n';
+        out_file << strpos++ << " STORE " << variables.at(name) << '\n';
     }
 }
 
@@ -191,6 +185,8 @@ void process_goto(std::fstream& out_file, std::stringstream& ss)
 {
     std::string dest_addr;
     ss >> dest_addr;
+    wrong_adresses.push_back(std::atoi(dest_addr.c_str()));
+    dest_addr = "-1";
     out_file << " JUMP " << dest_addr;
 }
 
@@ -201,9 +197,7 @@ void process_if_equal(
         std::fstream& f,
         std::string act_after_if)
 {
-    if (std::isdigit(o2.at(0))) {
-        variables.insert(std::make_pair(o2, varpos--));
-    }
+    if (std::isdigit(o2.at(0))) { variables.insert(std::make_pair(o2, varpos--)); }
     if (strpos < 10) f << '0';
     f << strpos++ << " LOAD " << variables.at(o2) << '\n';
     if (strpos < 10) f << '0';
@@ -216,10 +210,7 @@ void process_if_equal(
 }
 
 void process_if_greater(
-        const std::string& o1,
-        const std::string& o2,
-        const std::string& operation,
-        std::fstream& f)
+        const std::string& o1, const std::string& o2, const std::string& operation, std::fstream& f)
 {
     if (strpos < 10) f << '0';
     f << strpos++ << " LOAD " << variables.at(o2) << '\n';
@@ -230,10 +221,7 @@ void process_if_greater(
 }
 
 void process_if_less(
-        const std::string& o1,
-        const std::string& o2,
-        const std::string& operation,
-        std::fstream& f)
+        const std::string& o1, const std::string& o2, const std::string& operation, std::fstream& f)
 {
     if (strpos < 10) f << '0';
     f << strpos++ << " LOAD " << variables.at(o2) << '\n';
@@ -274,6 +262,7 @@ void process_next_str(std::fstream& out_file, std::string& s)
 
     if (prev_command != "IF") {
         ss >> num_of_str >> action;
+        adresses.insert(std::make_pair(std::atoi(num_of_str.c_str()), strpos));
     } else {
         ss >> action;
     }
@@ -283,8 +272,7 @@ void process_next_str(std::fstream& out_file, std::string& s)
 
     if (action == "REM") { return; }
 
-    if (strpos < 10 && action != "LET" && action != "IF")
-        out_file << '0';
+    if (strpos < 10 && action != "LET" && action != "IF") out_file << '0';
     if (action != "LET" && action != "IF") out_file << strpos++;
 
     prev_command = action;
@@ -299,6 +287,7 @@ void process_next_str(std::fstream& out_file, std::string& s)
         process_let(out_file, ss);
     } else if (action == "GOTO") {
         process_goto(out_file, ss);
+        // wrong_adresses.push_back();
     } else if (action == "IF") {
         process_if(out_file, ss);
     }
@@ -314,6 +303,26 @@ void write_left(std::fstream& f)
         } else {
             f << c.second << " = " << 0 << '\n';
         }
+    }
+}
+
+void translate_final_file(std::ifstream& source, std::ofstream& out)
+{
+    std::stringstream ss;
+    std::string num_of_str, action, address, actual;
+    while (std::getline(source, actual, '\n')) {
+        ss.clear();
+        ss.str(actual);
+        ss >> num_of_str >> action >> address;
+
+        if (action == "JUMP" && address == "-1") {
+            address = std::to_string(adresses.at(*wrong_adresses.begin()));
+            wrong_adresses.pop_front();
+        }
+
+        out << num_of_str << " " << action << " " << address << '\n';
+
+        // std::cout << actual << '\n';
     }
 }
 

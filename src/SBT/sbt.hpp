@@ -2,17 +2,19 @@
 
 #include <fstream>
 #include <iostream>
+#include <list>
+#include <map>
+#include <vector>
 
 #include <string>
 
 namespace sbt {
 
+extern std::map<int, int> adresses;
+extern std::list<int> wrong_adresses;
+
 /* Opens file. */
-void open_file(
-        const char* source,
-        const char* out,
-        std::fstream& f_source,
-        std::fstream& f_out);
+void open_file(const char* source, const char* out, std::fstream& f_source, std::fstream& f_out);
 
 /* Returns number of string in file f. */
 unsigned get_n_str(std::fstream& f);
@@ -57,11 +59,15 @@ void process_if_greater(
         const std::string& o1,
         const std::string& o2,
         const std::string& operation,
-        std::fstream& f);
+        std::fstream& f,
+        std::string act_after_if);
 void process_if_less(
         const std::string& o1,
         const std::string& o2,
         const std::string& operation,
-        std::fstream& f);
+        std::fstream& f,
+        std::string act_after_if);
+
+void translate_final_file(std::ifstream& source, std::ofstream& out);
 
 }
