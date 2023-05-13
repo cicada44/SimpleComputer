@@ -13,6 +13,8 @@
 
 namespace sbt {
 
+std::string prev_command;
+
 std::map<std::string, int> temp_vars;
 std::map<std::string, unsigned> variables;
 
@@ -206,9 +208,11 @@ void process_if_equal(
     f << strpos++ << " LOAD " << variables.at(o2) << '\n';
     if (strpos < 10) f << '0';
     f << strpos++ << " SUB " << variables.at(o1) << '\n';
-    process_next_str(f, act_after_if);
     if (strpos < 10) f << '0';
-    f << strpos++ << " JZ " << strpos + 2 << '\n';
+    f << strpos++ << " JZ " << strpos + 1 << '\n';
+    if (strpos < 10) f << '0';
+    f << strpos++ << " JUMP " << strpos + 1 << '\n';
+    process_next_str(f, act_after_if);
 }
 
 void process_if_greater(
@@ -268,20 +272,22 @@ void process_next_str(std::fstream& out_file, std::string& s)
     std::stringstream ss(s);
     std::string num_of_str, action;
 
-    if (std::count(s.begin(), s.end(), ' ') >= 2) {
+    if (prev_command != "IF") {
         ss >> num_of_str >> action;
     } else {
         ss >> action;
     }
 
-    std::cout << "NUM OF STR: " << num_of_str << '\t'
-              << "ACTION: " << action << '\n';
+    // std::cout << "NUM OF STR: " << num_of_str << '\t'
+    //           << "ACTION: " << action << '\n';
 
     if (action == "REM") { return; }
 
     if (strpos < 10 && action != "LET" && action != "IF")
         out_file << '0';
     if (action != "LET" && action != "IF") out_file << strpos++;
+
+    prev_command = action;
 
     if (action == "INPUT") {
         process_input(out_file, ss);

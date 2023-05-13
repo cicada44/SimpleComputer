@@ -193,14 +193,10 @@ void CU_process_key(enum keys* k)
             break;
         case LOAD:
             buf[strlen(buf) - 1] = '\0';
-            // printf("%s\n", buf);
-            // exit(-1);
-            // buf[strlen(buf)] = ' ';
             sc_memoryLoad(buf);
             break;
         case SAVE:
             buf[strlen(buf) - 1] = '\0';
-            // buf[strlen(buf)] = ' ';
             sc_memorySave(buf);
             break;
         default:
@@ -301,7 +297,7 @@ void CU_detect_n_execute_program(
                     instruction_counter = operand;
                 }
             } else if (command == 0x42) /* JZ */ {
-                if (accumulator >> 14 == 0) {
+                if (accumulator == 0) {
                     instruction_counter = operand;
                 }
             } else if (command == 0x43) /* HALT */ {
