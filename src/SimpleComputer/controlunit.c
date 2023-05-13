@@ -289,7 +289,7 @@ void CU_detect_n_execute_program(
             } else if (command == 0x40) /* JUMP */ {
                 instruction_counter = operand;
             } else if (command == 0x41) /* JNEG */ {
-                if (accumulator & 0x3fff) { instruction_counter = operand; }
+                if (accumulator & 0x4000) { instruction_counter = operand; }
             } else if (command == 0x42) /* JZ */ {
                 if (accumulator == 0) { instruction_counter = operand; }
             } else if (command == 0x43) /* HALT */ {

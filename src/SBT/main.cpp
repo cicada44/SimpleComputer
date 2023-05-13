@@ -49,5 +49,5 @@ int main(int argc, char* argv[])
     final_out_file.close();
     source_file.close();
 
-    // std::remove(name_out_file.c_str());
+    std::remove(name_out_file.c_str());
 }

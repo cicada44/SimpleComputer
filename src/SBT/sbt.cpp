@@ -210,25 +210,41 @@ void process_if_equal(
 }
 
 void process_if_greater(
-        const std::string& o1, const std::string& o2, const std::string& operation, std::fstream& f)
+        const std::string& o1,
+        const std::string& o2,
+        const std::string& operation,
+        std::fstream& f,
+        std::string act_after_if)
 {
-    if (strpos < 10) f << '0';
-    f << strpos++ << " LOAD " << variables.at(o2) << '\n';
-    if (strpos < 10) f << '0';
-    f << strpos++ << " SUB " << variables.at(o1) << '\n';
-    if (strpos < 10) f << '0';
-    f << strpos++ << " JNEG " << strpos + 2 << '\n';
-}
-
-void process_if_less(
-        const std::string& o1, const std::string& o2, const std::string& operation, std::fstream& f)
-{
+    if (std::isdigit(o2.at(0))) { variables.insert(std::make_pair(o2, varpos--)); }
     if (strpos < 10) f << '0';
     f << strpos++ << " LOAD " << variables.at(o2) << '\n';
     if (strpos < 10) f << '0';
     f << strpos++ << " SUB " << variables.at(o1) << '\n';
     if (strpos < 10) f << '0';
     f << strpos++ << " JNEG " << strpos + 1 << '\n';
+    if (strpos < 10) f << '0';
+    f << strpos++ << " JUMP " << strpos + 1 << '\n';
+    process_next_str(f, act_after_if);
+}
+
+void process_if_less(
+        const std::string& o1,
+        const std::string& o2,
+        const std::string& operation,
+        std::fstream& f,
+        std::string act_after_if)
+{
+    if (std::isdigit(o2.at(0))) { variables.insert(std::make_pair(o2, varpos--)); }
+    if (strpos < 10) f << '0';
+    f << strpos++ << " LOAD " << variables.at(o1) << '\n';
+    if (strpos < 10) f << '0';
+    f << strpos++ << " SUB " << variables.at(o2) << '\n';
+    if (strpos < 10) f << '0';
+    f << strpos++ << " JNEG " << strpos + 1 << '\n';
+    if (strpos < 10) f << '0';
+    f << strpos++ << " JUMP " << strpos + 1 << '\n';
+    process_next_str(f, act_after_if);
 }
 
 void process_if(std::fstream& out_file, std::stringstream& ss)
@@ -247,9 +263,9 @@ void process_if(std::fstream& out_file, std::stringstream& ss)
     if (operation == "=") {
         process_if_equal(o1, o2, operation, out_file, expr);
     } else if (operation == "<") {
-        process_if_less(o1, o2, operation, out_file);
+        process_if_less(o1, o2, operation, out_file, expr);
     } else if (operation == ">") {
-        process_if_greater(o1, o2, operation, out_file);
+        process_if_greater(o1, o2, operation, out_file, expr);
     }
 }
 
