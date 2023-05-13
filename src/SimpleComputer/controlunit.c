@@ -19,6 +19,8 @@
 #include <termios.h>
 #include <unistd.h>
 
+__int16_t last_output;
+
 __int16_t commands[] = {
         0x10, /* READ */
         0x11, /* WRITE */
@@ -100,13 +102,12 @@ void CU_clean_n_print_gui()
 {
     mt_clrscr();
     GUI();
-    mt_gotoXX(23, 15);
+    mt_gotoXX(24, 4);
 }
 
 void CU_check_n_reset_comp()
 {
-    if (instruction_counter
-        > MEMORY_MAX_ADDRESS) { /* Reset all computer. */
+    if (instruction_counter > MEMORY_MAX_ADDRESS) { /* Reset all computer. */
         raise(SIGUSR1);
         sc_regSet(FLAG_IGNORE_N, BIT_ONE);
     }
@@ -130,8 +131,7 @@ void CU_process_key(enum keys* k)
         }
     }
 
-    if (*k == ENTER || *k == F5 || *k == F6 || *k == LOAD
-        || *k == SAVE) {
+    if (*k == ENTER || *k == F5 || *k == F6 || *k == LOAD || *k == SAVE) {
         int term = mt_open();
 
         write(0, MSG_INPUT, sizeof(MSG_INPUT));
@@ -177,8 +177,7 @@ void CU_process_key(enum keys* k)
                 tmp_accum = strtol(buf, NULL, 16);
             }
 
-            if (tmp_accum < MEMORY_MAX_CELL_VALUE
-                && tmp_accum >= MEMORY_MIN_CELL_VALUE) {
+            if (tmp_accum < MEMORY_MAX_CELL_VALUE && tmp_accum >= MEMORY_MIN_CELL_VALUE) {
                 accumulator = tmp_accum;
                 if (minus == 1) { accumulator |= 0x4000; }
             }
@@ -186,8 +185,7 @@ void CU_process_key(enum keys* k)
             break;
         case F6:;
             __int16_t new_instr_cnter = (__int16_t)atoi(buf);
-            if (new_instr_cnter < MEMORY_MAX_ADDRESS
-                && new_instr_cnter >= MEMORY_MIN_ADDRESS) {
+            if (new_instr_cnter < MEMORY_MAX_ADDRESS && new_instr_cnter >= MEMORY_MIN_ADDRESS) {
                 instruction_counter = new_instr_cnter;
             }
             break;
@@ -264,9 +262,7 @@ void CU_detect_n_execute_program(
 
                 if (minus_flag == 1) { actual_num |= 0x4000; }
 
-                if (actual_num < 0x7fff) {
-                    sc_memorySet(operand, actual_num);
-                }
+                if (actual_num < 0x7fff) { sc_memorySet(operand, actual_num); }
                 setvbuf(stdout, NULL, _IONBF, 0);
                 setvbuf(stdin, NULL, _IONBF, 0);
 
@@ -279,10 +275,10 @@ void CU_detect_n_execute_program(
                 char* buf = itoa(value, 16);
 
                 int term = mt_open();
-                write(term, "\n> ", 4);
+                mt_gotoXX(26, 62);
+                // write(term, "\n> ", 4);
                 write(term, buf, 4);
                 if (strlen(buf) == 0) { write(term, "0", 2); }
-                sleep(1);
             } else if (command == 0x20) /* LOAD */
             {
                 __int16_t value = 0;
@@ -293,13 +289,9 @@ void CU_detect_n_execute_program(
             } else if (command == 0x40) /* JUMP */ {
                 instruction_counter = operand;
             } else if (command == 0x41) /* JNEG */ {
-                if (accumulator & 0x3fff) {
-                    instruction_counter = operand;
-                }
+                if (accumulator & 0x3fff) { instruction_counter = operand; }
             } else if (command == 0x42) /* JZ */ {
-                if (accumulator == 0) {
-                    instruction_counter = operand;
-                }
+                if (accumulator == 0) { instruction_counter = operand; }
             } else if (command == 0x43) /* HALT */ {
                 sc_regSet(FLAG_IGNORE_N, BIT_ONE);
             }
@@ -313,27 +305,24 @@ void CU_detect_n_execute_program(
 
 void interface()
 {
-    sc_memoryInit(); /* Memory initialization. */
-    sc_regInit();    /* Registers initialization. */
-    sc_regSet(
-            FLAG_IGNORE_N,
-            BIT_ONE); /* Set register to ignore commands. */
-    __int16_t oper_detecter = 0;      /* Memory cell number. */
-    __int8_t ignore_state = BIT_ZERO; /* Ignoring ticks state. */
-    enum keys k;                      /* Processing input keys. */
-    struct itimerval nval = {.it_interval.tv_sec = 2,
+    sc_memoryInit();                   /* Memory initialization. */
+    sc_regInit();                      /* Registers initialization. */
+    sc_regSet(FLAG_IGNORE_N, BIT_ONE); /* Set register to ignore commands. */
+    __int16_t oper_detecter = 0;       /* Memory cell number. */
+    __int8_t ignore_state = BIT_ZERO;  /* Ignoring ticks state. */
+    enum keys k;                       /* Processing input keys. */
+    struct itimerval nval = {.it_interval.tv_sec = 1,
                              .it_interval.tv_usec = 0,
-                             .it_value.tv_sec = 1,
-                             .it_value.tv_usec = 0},
+                             .it_value.tv_sec = 0,
+                             .it_value.tv_usec = 80000},
                      oval = {.it_interval.tv_sec = 0,
                              .it_interval.tv_usec = 0,
                              .it_value.tv_sec = 0,
                              .it_value.tv_usec = 0}; /* Timers. */
     // setitimer(ITIMER_REAL, &nval, &oval);            /* Start
     // timer. */
-    signal(SIGALRM,
-           CU_icnt_increaser); /* Set signal state from alarm. */
-    signal(SIGUSR1, CU_reset); /* Reset computer. */
+    signal(SIGALRM, CU_icnt_increaser); /* Set signal state from alarm. */
+    signal(SIGUSR1, CU_reset);          /* Reset computer. */
 
     while (1) {
         /* Reset key. */

@@ -80,6 +80,8 @@ extern struct RUNTIME_ERRORS RE;
 #define TITLE_KEYS_RESET "i  - reset"
 #define TITLE_KEYS_ACCUM "F5 - accumulator"
 #define TITLE_KEYS_INSTRCNTER "F6 - instructionCounter"
+#define TITLE_OUTPUT " Output "
+#define TITLE_INPUT " Input "
 
 /* Maximal command code. */
 #define MAX_COMMAND_OPERATOR_VALUE 0x7f

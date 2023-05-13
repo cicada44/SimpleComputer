@@ -29,12 +29,9 @@ int output_memory_in_box(int x1, int y1, int x2, int y2)
     ++x1; /* Goto next line... */
 
     for (__uint8_t i = MEMORY_MIN_ADDRESS; i != MEMORY_SIZE / 10; ++i) {
-        if (mt_gotoXX(x1++, y1 + 1) == FAIL) {
-            return FAIL;
-        } /* Goto next line... */
+        if (mt_gotoXX(x1++, y1 + 1) == FAIL) { return FAIL; } /* Goto next line... */
 
-        for (int j = MEMORY_MIN_ADDRESS; j != MEMORY_SIZE / 10;
-             ++j) { /* Print row of RAM. */
+        for (int j = MEMORY_MIN_ADDRESS; j != MEMORY_SIZE / 10; ++j) { /* Print row of RAM. */
             if (sc_memoryGet(i * (MEMORY_SIZE / 10) + j, &tval) == FAIL) {
                 runtime_error_process(RE.ERROR_MEM_GET);
                 close(term);
@@ -67,9 +64,7 @@ int output_memory_in_box(int x1, int y1, int x2, int y2)
                 return FAIL;
             }
 
-            if (i * (MEMORY_SIZE / 10) + j == instruction_counter) {
-                mt_resetcolor();
-            }
+            if (i * (MEMORY_SIZE / 10) + j == instruction_counter) { mt_resetcolor(); }
 
             sprintf(buf, " ");
             write(term, buf, 1);
@@ -78,8 +73,7 @@ int output_memory_in_box(int x1, int y1, int x2, int y2)
         bc_printNL();
     }
 
-    if (mt_gotoXX(1, 30) == FAIL
-        || write(term, TITLE_MEMORY, sizeof(TITLE_MEMORY)) == FAIL) {
+    if (mt_gotoXX(1, 30) == FAIL || write(term, TITLE_MEMORY, sizeof(TITLE_MEMORY)) == FAIL) {
         runtime_error_process(RE.ERROR_TERMINAL_INTERFACE);
         close(term);
         return FAIL;
@@ -94,9 +88,7 @@ int output_accum()
 {
     int term = mt_open();
 
-    if (bc_box(1, 63, 1, 20) == FAIL) {
-        return FAIL;
-    }
+    if (bc_box(1, 63, 1, 20) == FAIL) { return FAIL; }
 
     mt_gotoXX(1, 67);
     write(term, TITLE_ACCUM, sizeof(TITLE_ACCUM));
@@ -111,9 +103,7 @@ int output_accum()
         write(term, "+", 2);
     }
 
-    if (accum_value < 0) {
-        accum_value = abs(accum_value);
-    }
+    if (accum_value < 0) { accum_value = abs(accum_value); }
 
     char buf[16] = {};
     sprintf(buf, "%04X", accum_value & 0x3fff);
@@ -126,9 +116,7 @@ int output_accum()
 
 int output_instrcounter()
 {
-    if (bc_box(4, 63, 1, 20) == FAIL) {
-        return FAIL;
-    }
+    if (bc_box(4, 63, 1, 20) == FAIL) { return FAIL; }
 
     int term = mt_open();
 
@@ -156,9 +144,7 @@ int output_instrcounter()
 
 int output_operation()
 {
-    if (bc_box(7, 63, 1, 20) == FAIL) {
-        return FAIL;
-    }
+    if (bc_box(7, 63, 1, 20) == FAIL) { return FAIL; }
 
     int term = mt_open();
 
@@ -178,7 +164,6 @@ int output_operation()
 
     if ((actual_operation & 0x4000) >> 14 == 1) {
         write(term, MINUS, sizeof(MINUS));
-        // instruction_counter >>= 1;
     } else {
         write(term, PLUS, sizeof(PLUS));
     }
@@ -192,18 +177,14 @@ int output_operation()
 
 int output_flags()
 {
-    if (bc_box(10, 63, 1, 20) == FAIL) {
-        return FAIL;
-    }
+    if (bc_box(10, 63, 1, 20) == FAIL) { return FAIL; }
 
     // Turn off buffering.
     setvbuf(stdout, NULL, _IONBF, 0);
 
     int term = open(TERM_PATH, O_WRONLY);
 
-    if (term == FAIL || isatty(term) == 0) {
-        return FAIL;
-    }
+    if (term == FAIL || isatty(term) == 0) { return FAIL; }
 
     mt_gotoXX(10, 70);
     write(term, TITLE_FLAGS, sizeof(TITLE_FLAGS));
@@ -237,18 +218,14 @@ int output_flags()
 
 int output_keys()
 {
-    if (bc_box(13, 47, 8, 36) == FAIL) {
-        return FAIL;
-    }
+    if (bc_box(13, 47, 8, 36) == FAIL) { return FAIL; }
 
     // Turn off buffering.
     setvbuf(stdout, NULL, _IONBF, 0);
 
     int term = open(TERM_PATH, O_WRONLY);
 
-    if (term == FAIL || isatty(term) == 0) {
-        return FAIL;
-    }
+    if (term == FAIL || isatty(term) == 0) { return FAIL; }
 
     mt_gotoXX(13, 48);
 
@@ -281,18 +258,14 @@ int output_iofield()
     setvbuf(stdout, NULL, _IONBF, 0);
 
     int term = open(TERM_PATH, O_WRONLY);
+    if (term == FAIL) { return FAIL; }
 
-    if (term == FAIL) {
-        return FAIL;
-    }
+    mt_gotoXX(24, 2);
 
-    mt_gotoXX(23, 0);
-
-    write(term, "Input\\Output: ", sizeof("Input\\Output: "));
-
+    write(term, "> ", sizeof("> "));
     close(term);
 
-    return FAIL;
+    return SUCCESS;
 }
 
 int print_mem_cell_sign(NUM a)
@@ -343,16 +316,26 @@ int print_MC(int n)
     print_mem_cell_3(NUMS[((operand >> 4) & 0xf) + 2]);
     print_mem_cell_2(NUMS[(command & 0xf) + 2]);
     print_mem_cell_1(NUMS[((command >> 4) & 0xf) + 2]);
-    // } else {
-    //     print_mem_cell_sign(NUMS[1]);
-
-    //     print_mem_cell_4(NUMS[(num & 0xf) + 2]);
-    //     print_mem_cell_3(NUMS[((num >> 4) & 0xf) + 2]);
-    //     print_mem_cell_2(NUMS[((num >> 8) & 0xf) + 2]);
-    //     print_mem_cell_1(NUMS[((num >> 12) & 0xf) + 2]);
-    // }
 
     return SUCCESS;
+}
+
+void print_output_box()
+{
+    int term = mt_open();
+    bc_box(23, 47, 5, 36);
+    mt_gotoXX(23, 62);
+    write(term, TITLE_OUTPUT, sizeof(TITLE_OUTPUT));
+    close(term);
+}
+
+void print_input_box()
+{
+    int term = mt_open();
+    bc_box(23, 0, 5, 44);
+    mt_gotoXX(23, 20);
+    write(term, TITLE_INPUT, sizeof(TITLE_INPUT));
+    close(term);
 }
 
 void GUI()
@@ -363,6 +346,8 @@ void GUI()
     output_operation();
     output_flags();
     output_keys();
-    output_iofield();
+    print_output_box();
+    print_input_box();
     print_MC(instruction_counter);
+    output_iofield();
 }
