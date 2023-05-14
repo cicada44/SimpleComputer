@@ -53,8 +53,6 @@ void sat_read_next_obj(FILE* source, __int16_t* mem_cell, char* command, __int16
         *operand |= (SHIFT_MIN << (15 - SHIFT_MIN));
     }
 
-    printf("cell - %d\n", *mem_cell);
-
     sat_goto_next_str(source);
 }
 
@@ -88,7 +86,6 @@ void sat_encode_command(const char* name, __int16_t* code, __int16_t* mem_cell, 
         *code = 0x10;
     } else if (!strcmp(name, "=")) {
         *mem_cell = operand;
-        printf("mem_cell - %d\n", operand);
         *code = 0x0;
     } else {
         fprintf(stderr, "[E] Unknown command, exiting...\n");

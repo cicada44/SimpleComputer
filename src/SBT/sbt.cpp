@@ -283,9 +283,6 @@ void process_next_str(std::fstream& out_file, std::string& s)
         ss >> action;
     }
 
-    // std::cout << "NUM OF STR: " << num_of_str << '\t'
-    //           << "ACTION: " << action << '\n';
-
     if (action == "REM") { return; }
 
     if (strpos < 10 && action != "LET" && action != "IF") out_file << '0';

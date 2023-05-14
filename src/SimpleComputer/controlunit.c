@@ -19,7 +19,7 @@
 #include <termios.h>
 #include <unistd.h>
 
-__int16_t last_output;
+__int16_t last_output = 0;
 
 __int16_t commands[] = {
         0x10, /* READ */
@@ -102,6 +102,8 @@ void CU_clean_n_print_gui()
 {
     mt_clrscr();
     GUI();
+    mt_gotoXX(26, 64);
+    printf("%d", last_output);
     mt_gotoXX(24, 4);
 }
 
@@ -270,13 +272,12 @@ void CU_detect_n_execute_program(
 
                 setitimer(ITIMER_REAL, nval, oval);
             } else if (command == 0x11) { /* WRITE */
-                __int16_t value;
+                __int16_t value = -1;
                 sc_memoryGet(operand, &value);
+                if (value != -1) { last_output = value; }
                 char* buf = itoa(value, 16);
-
                 int term = mt_open();
                 mt_gotoXX(26, 62);
-                // write(term, "\n> ", 4);
                 write(term, buf, 4);
                 if (strlen(buf) == 0) { write(term, "0", 2); }
             } else if (command == 0x20) /* LOAD */
