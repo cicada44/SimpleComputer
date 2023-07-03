@@ -79,6 +79,7 @@ std::string RPN_translate(std::stringstream& ss)
 {
     std::stack<std::string> helper_stack;
     std::string tmp, final_expression;
+
     while (ss >> tmp) {
         if (tmp == "(") {
             helper_stack.push(tmp);
@@ -131,11 +132,6 @@ void process_let(std::fstream& out_file, std::stringstream& ss)
     std::stack<std::string> calc_stack;
     std::string tmp;
     while (calc_ss >> tmp) {
-        // std::cout << "\n\nVARIABLES\n";
-        // for (const auto& c : variables) {
-        //     std::cout << c.first << ' ' << c.second << '\n';
-        // }
-        // std::cout << '\n';
         if (tmp == "-" || tmp == "+" || tmp == "*" || tmp == "/") {
             std::string o1 = calc_stack.top();
             calc_stack.pop();
@@ -300,7 +296,6 @@ void process_next_str(std::fstream& out_file, std::string& s)
         process_let(out_file, ss);
     } else if (action == "GOTO") {
         process_goto(out_file, ss);
-        // wrong_adresses.push_back();
     } else if (action == "IF") {
         process_if(out_file, ss);
     }
@@ -323,6 +318,7 @@ void translate_final_file(std::ifstream& source, std::ofstream& out)
 {
     std::stringstream ss;
     std::string num_of_str, action, address, actual;
+
     while (std::getline(source, actual, '\n')) {
         ss.clear();
         ss.str(actual);
@@ -334,8 +330,6 @@ void translate_final_file(std::ifstream& source, std::ofstream& out)
         }
 
         out << num_of_str << " " << action << " " << address << '\n';
-
-        // std::cout << actual << '\n';
     }
 }
 

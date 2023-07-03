@@ -1,3 +1,10 @@
+//-----------------------------------------------------------------------------
+//
+// Header for libcommon.a library. Contains all using defines and runtime errors
+// processing functions.
+//
+//-----------------------------------------------------------------------------
+
 #pragma once
 
 /* Processes errors output. */

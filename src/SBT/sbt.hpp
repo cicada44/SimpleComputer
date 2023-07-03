@@ -55,12 +55,14 @@ void process_if_equal(
         const std::string& operation,
         std::fstream& f,
         std::string act_after_if);
+
 void process_if_greater(
         const std::string& o1,
         const std::string& o2,
         const std::string& operation,
         std::fstream& f,
         std::string act_after_if);
+
 void process_if_less(
         const std::string& o1,
         const std::string& o2,

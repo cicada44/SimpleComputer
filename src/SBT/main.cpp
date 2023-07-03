@@ -15,6 +15,7 @@ int main(int argc, char* argv[])
         exit(-1);
     }
 
+    /* --------------------------------------------- */
     std::fstream F_source, F_out;
     sbt::open_file(argv[1], argv[2], F_source, F_out);
     std::string inputable;
@@ -27,15 +28,7 @@ int main(int argc, char* argv[])
     F_out.close();
 
     std::cout << "[I] END OF TRANSLATION [I]\n";
-
-    // for (const auto& c : sbt::adresses) {
-    //     std::cout << c.first << '\t' << c.second << '\n';
-    // }
-    // std::cout << "\n\n\n";
-    // for (const auto& c : sbt::wrong_adresses) {
-    //     std::cout << c << ' ';
-    // }
-    // std::cout << '\n';
+    /* --------------------------------------------- */
 
     /* Renaming file. */
     std::string name_out_file(argv[2]);
@@ -48,6 +41,6 @@ int main(int argc, char* argv[])
 
     final_out_file.close();
     source_file.close();
-
+    
     std::remove(name_out_file.c_str());
 }

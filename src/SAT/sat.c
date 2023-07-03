@@ -82,8 +82,6 @@ void sat_encode_command(const char* name, __int16_t* code, __int16_t* mem_cell, 
         *code = 0x42;
     } else if (!strcmp(name, "HALT")) {
         *code = 0x43;
-    } else if (!strcmp(name, "SUB")) {
-        *code = 0x10;
     } else if (!strcmp(name, "=")) {
         *mem_cell = operand;
         *code = 0x0;

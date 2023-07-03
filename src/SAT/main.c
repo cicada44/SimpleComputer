@@ -33,4 +33,7 @@ int main(int argc, char* argv[])
     }
 
     fwrite(mem_dump, sizeof(__int16_t), MEMORY_SIZE, F_out);
+
+    fclose(F_out);
+    fclose(F_source);
 }
