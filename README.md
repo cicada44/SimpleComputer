@@ -39,7 +39,7 @@ or
 The Simple Computer project includes two translators:
 one for the Simple Assembler language and another for the Simple Basic language. These translators allow you to write programs in these languages and convert them into the binary format readable by the Simple Computer model.
 
-## Simple Assembler Translator
+## Simple Assembler Translator (SAT)
 
 The Simple Assembler translator converts programs written in Simple Assembler language into a binary format that can be executed by the Simple Computer model. To run the translator, use the following command:
 
@@ -50,7 +50,7 @@ The Simple Assembler translator converts programs written in Simple Assembler la
 Where `input-file.sa` is the file containing the Simple Assembler program, and `output-file.o` is the resulting binary file.
 
 
-## Simple Basic Translator
+## Simple Basic Translator (SBT)
 
 The Simple Basic translator enables programming in the Simple Basic language for the Simple Computer model. It converts Simple Basic programs into Simple Assembler code, which can then be translated into the binary format using the Simple Assembler translator.
 
