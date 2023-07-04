@@ -92,8 +92,8 @@ void sat_encode_command(const char* name, __int16_t* code, __int16_t* mem_cell, 
 }
 
 void sat_write_next_obj(
-        __attribute_maybe_unused__ FILE* file,
-        __attribute_maybe_unused__ __int16_t mem_cell,
+        [[maybe_unused]] FILE* file,
+        [[maybe_unused]] __int16_t mem_cell,
         __int16_t command_code,
         __int16_t operand,
         __int16_t* mem_ptr)
