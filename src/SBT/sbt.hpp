@@ -1,3 +1,9 @@
+//-----------------------------------------------------------------------------
+//
+// Header for SimpleBasic. Contains functions for working with SBT.
+//
+//-----------------------------------------------------------------------------
+
 #pragma once
 
 #include <fstream>
@@ -37,18 +43,22 @@ void process_let(std::fstream& out_file, std::stringstream& ss);
 /* Processes GOTO command. */
 void process_goto(std::fstream& out_file, std::stringstream& ss);
 
+/* Return 0, 1 or 2 depends of sign. */
 int check_priority(const std::string& s);
 
 /* Returns RPN expression. */
 std::string RPN_translate(std::stringstream& ss);
 
+/* Writes variable to output file. */
 void add_number(std::fstream& f, const std::string& str);
 
+/* Writes variables to output file in the end. */
 void write_left(std::fstream& f);
 
 /* Processes IF command. */
 void process_if(std::fstream& out_file, std::stringstream& ss);
 
+/* Process '=' sign. */
 void process_if_equal(
         const std::string& o1,
         const std::string& o2,
@@ -56,6 +66,7 @@ void process_if_equal(
         std::fstream& f,
         std::string act_after_if);
 
+/* Process '>' sign. */
 void process_if_greater(
         const std::string& o1,
         const std::string& o2,
@@ -63,6 +74,7 @@ void process_if_greater(
         std::fstream& f,
         std::string act_after_if);
 
+/* Process '<' sign. */
 void process_if_less(
         const std::string& o1,
         const std::string& o2,
@@ -70,6 +82,7 @@ void process_if_less(
         std::fstream& f,
         std::string act_after_if);
 
+/* Function to process GOTO problem. */
 void translate_final_file(std::ifstream& source, std::ofstream& out);
 
 }
