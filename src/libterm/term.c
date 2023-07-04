@@ -1,6 +1,7 @@
-#include <fcntl.h>
 #include <libcommon/common.h>
 #include <libterm/term.h>
+
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/ioctl.h>
@@ -37,13 +38,9 @@ int mt_open()
 int mt_clrscr()
 {
     int term = mt_open();
-
     char buf[BUF_SIZE] = CLEAR_TERM;
-
     write(term, buf, BUF_SIZE);
-
     mt_gotoXX(START_POS, START_POS);
-
     close(term);
 
     return SUCCESS;
@@ -57,13 +54,9 @@ int mt_gotoXX(int x, int y)
     }
 
     int term = mt_open();
-
     char buf[BUF_SIZE] = {};
-
     sprintf(buf, "\033[%d;%df", x, y);
-
     write(term, buf, BUF_SIZE);
-
     close(term);
 
     return SUCCESS;
@@ -73,8 +66,7 @@ int mt_getscreensize(int* rows, int* cols)
 {
     struct winsize ws;
 
-    if (rows == NULL || cols == NULL
-        || ioctl(TERMINAL_OPENCODE, TIOCGWINSZ, &ws)) {
+    if (rows == NULL || cols == NULL || ioctl(TERMINAL_OPENCODE, TIOCGWINSZ, &ws)) {
         runtime_error_process(RE.ERROR_ANY_TERM);
         return FAIL;
     }
@@ -88,7 +80,6 @@ int mt_getscreensize(int* rows, int* cols)
 int mt_setfgcolor(enum color c)
 {
     int term = mt_open();
-
     char buf[BUF_SIZE] = {};
 
     sprintf(buf, "%s%d%s", "\e[", c, "m");
@@ -106,7 +97,6 @@ int mt_setfgcolor(enum color c)
 int mt_setbgcolor(enum color c)
 {
     int term = mt_open();
-
     char buf[BUF_SIZE] = {};
 
     sprintf(buf, "%s%d%s", "\e[", c + DIFF_BG_COLOR, "m");
@@ -124,7 +114,6 @@ int mt_setbgcolor(enum color c)
 int mt_resetcolor()
 {
     int term = mt_open();
-
     char buf[BUF_SIZE] = {};
 
     sprintf(buf, "%s", RESET_COLOR);

@@ -1,9 +1,10 @@
-#include <fcntl.h>
 #include <libbigchar/bigchar.h>
 #include <libcommon/common.h>
 #include <libcomputer/comp.h>
 #include <libreadkey/readkey.h>
 #include <libterm/term.h>
+
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -94,8 +95,7 @@ int rk_termsave(const char* const file_name)
 
     struct termios actual_term_set;
 
-    if (fwrite(&actual_term_set, sizeof(actual_term_set), 1, termstate_f)
-        != 1) {
+    if (fwrite(&actual_term_set, sizeof(actual_term_set), 1, termstate_f) != 1) {
         fclose(termstate_f);
         runtime_error_process(RE.ERROR_FILE_WRITING);
         close(term);
@@ -112,9 +112,7 @@ int rk_termsave(const char* const file_name)
 int rk_termrestore(const char* const file_name)
 {
     int term = mt_open();
-
     FILE* termstate_f;
-
     termstate_f = fopen(file_name, READ_BIN);
 
     if (termstate_f == NULL) {
@@ -135,7 +133,6 @@ int rk_termrestore(const char* const file_name)
     tcsetattr(0, TCSANOW, &actual_term_set);
 
     fclose(termstate_f);
-
     close(term);
 
     return SUCCESS;

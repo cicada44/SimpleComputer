@@ -1,5 +1,8 @@
-/* Library for working with RAM.
-   All functions return SUCCESS or FAIL (defined in common.h).  */
+//-----------------------------------------------------------------------------
+//
+// Header for libcomp.a library. Contains functions for working with RAM.
+//
+//-----------------------------------------------------------------------------
 
 #pragma once
 

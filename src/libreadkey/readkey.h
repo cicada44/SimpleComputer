@@ -1,24 +1,14 @@
-/* Library for working with reading input from user.
-   All functions return SUCCESS or FAIL (defined in common.h).  */
+//-----------------------------------------------------------------------------
+//
+// Header for libreadkey.a. Contains functions for working with terminal I/O
+// in SimpleComputer.
+//
+//-----------------------------------------------------------------------------
 
 #pragma once
 
-// Readable characters.
-enum keys {
-    LOAD,
-    SAVE,
-    RUN,
-    STEP,
-    RESET,
-    F5,
-    F6,
-    UP,
-    DOWN,
-    LEFT,
-    RIGHT,
-    ENTER,
-    OTHER
-};
+/* Readable characters. */
+enum keys { LOAD, SAVE, RUN, STEP, RESET, F5, F6, UP, DOWN, LEFT, RIGHT, ENTER, OTHER };
 
 /* Read sequence from terminal and write first pressed key to k.  */
 int rk_readkey(enum keys* k);

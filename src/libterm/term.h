@@ -1,6 +1,9 @@
-/*  Library for working with terminal.
- *  All functions except mt_open return SUCCESS or FAIL (defined in common.h).
- */
+//-----------------------------------------------------------------------------
+//
+// Header for libterm.a library. Contains functions for working terminal
+// processing.
+//
+//-----------------------------------------------------------------------------
 
 #pragma once
 
