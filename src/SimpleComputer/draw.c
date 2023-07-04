@@ -16,8 +16,6 @@
 #include <termios.h>
 #include <unistd.h>
 
-#define BUF_SIZE 16
-
 int output_memory_in_box(int x1, int y1, int x2, int y2)
 {
     int term = mt_open();

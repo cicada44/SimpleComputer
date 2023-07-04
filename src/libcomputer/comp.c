@@ -40,8 +40,8 @@ int sc_memorySet(__int8_t address, __int16_t value)
 
 int sc_memoryGet(__int8_t address, __int16_t* value)
 {
-    if (value == NULL || address < MEMORY_MIN_ADDRESS
-        || address > MEMORY_MAX_ADDRESS || memory == NULL) {
+    if (value == NULL || address < MEMORY_MIN_ADDRESS || address > MEMORY_MAX_ADDRESS
+        || memory == NULL) {
         sc_regSet(FLAG_OUT_OF_MEM_N, BIT_ONE);
         return FAIL;
     }
@@ -61,8 +61,7 @@ int sc_memorySave(char* filename)
         return FAIL;
     }
 
-    if (fwrite(memory, sizeof(__int16_t), MEMORY_SIZE, output_file)
-        != MEMORY_SIZE) {
+    if (fwrite(memory, sizeof(__int16_t), MEMORY_SIZE, output_file) != MEMORY_SIZE) {
         fclose(output_file);
         runtime_error_process(RE.ERROR_FILE_READING);
         return FAIL;
@@ -83,8 +82,7 @@ int sc_memoryLoad(char* filename)
         return FAIL;
     }
 
-    if (fread(memory, sizeof(__int16_t), MEMORY_SIZE, input_file)
-        != MEMORY_SIZE) {
+    if (fread(memory, sizeof(__int16_t), MEMORY_SIZE, input_file) != MEMORY_SIZE) {
         fclose(input_file);
         runtime_error_process(RE.ERROR_FILE_READING);
         return FAIL;

@@ -30,6 +30,10 @@ Run the program:
 
     ./SimpleComputer
 
+or
+
+    make run
+
 # Translators
 
 The Simple Computer project includes two translators:
