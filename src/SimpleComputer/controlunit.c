@@ -1,14 +1,15 @@
 #include <SimpleComputer/ALU.h>
 #include <SimpleComputer/controlunit.h>
 #include <SimpleComputer/draw.h>
-#include <assert.h>
-#include <ctype.h>
-#include <fcntl.h>
 #include <libbigchar/bigchar.h>
 #include <libcommon/common.h>
 #include <libcomputer/comp.h>
 #include <libreadkey/readkey.h>
 #include <libterm/term.h>
+
+#include <assert.h>
+#include <ctype.h>
+#include <fcntl.h>
 #include <memory.h>
 #include <signal.h>
 #include <stdio.h>
@@ -26,10 +27,6 @@ __int16_t commands[] = {
         0x11, /* WRITE */
         0x20, /* LOAD */
         0x21, /* STORE */
-        // 0x30, /* ADD */
-        // 0x31, /* SUB */
-        // 0x32, /* DIVIDE */
-        // 0x33, /* MUL */
         0x40, /* JUMP */
         0x41, /* JNEG */
         0x42, /* JZ */
@@ -115,6 +112,77 @@ void CU_check_n_reset_comp()
     }
 }
 
+void CU_process_key_ENTER()
+{
+    char buf[255] = {};
+    read(0, buf, 255);
+
+    int minus_flag = 0;
+    __int16_t actual_num = 0;
+
+    if (buf[0] == '-') {
+        minus_flag = 1;
+        buf[0] = '0';
+        actual_num = strtol(buf, NULL, 16);
+    } else {
+        actual_num = strtol(buf, NULL, 16);
+    }
+
+    if (minus_flag == 1) { actual_num |= 0x4000; }
+
+    sc_memorySet(instruction_counter, actual_num);
+    setvbuf(stdout, NULL, _IONBF, 0);
+    setvbuf(stdin, NULL, _IONBF, 0);
+}
+
+void CU_process_key_F5()
+{
+    char buf[255] = {};
+    read(0, buf, 255);
+
+    int minus = 0;
+    __int16_t tmp_accum = 0;
+
+    if (buf[0] == '-') {
+        buf[0] = 0;
+        minus = 1;
+        tmp_accum = strtol(buf + 1, NULL, 16);
+    } else {
+        tmp_accum = strtol(buf, NULL, 16);
+    }
+
+    if (tmp_accum < MEMORY_MAX_CELL_VALUE && tmp_accum >= MEMORY_MIN_CELL_VALUE) {
+        accumulator = tmp_accum;
+        if (minus == 1) { accumulator |= 0x4000; }
+    }
+}
+
+void CU_process_key_F6()
+{
+    char buf[255] = {};
+    read(0, buf, 255);
+    __int16_t new_instr_cnter = (__int16_t)atoi(buf);
+    if (new_instr_cnter < MEMORY_MAX_ADDRESS && new_instr_cnter >= MEMORY_MIN_ADDRESS) {
+        instruction_counter = new_instr_cnter;
+    }
+}
+
+void CU_process_key_LOAD()
+{
+    char buf[255] = {};
+    read(0, buf, 255);
+    buf[strlen(buf) - 1] = '\0';
+    sc_memoryLoad(buf);
+}
+
+void CU_process_key_SAVE()
+{
+    char buf[255] = {};
+    read(0, buf, 255);
+    buf[strlen(buf) - 1] = '\0';
+    sc_memorySave(buf);
+}
+
 void CU_process_key(enum keys* k)
 {
     if (*k == RESET) {
@@ -145,63 +213,16 @@ void CU_process_key(enum keys* k)
         actual_term_set.c_lflag |= ICANON;
         tcsetattr(0, TCSANOW, &actual_term_set);
 
-        char buf[255] = {};
-        read(0, buf, 255);
-
-        switch (*k) {
-        case ENTER:;
-            int minus_flag = 0;
-            __int16_t actual_num = 0;
-
-            if (buf[0] == '-') {
-                minus_flag = 1;
-                buf[0] = '0';
-                actual_num = strtol(buf, NULL, 16);
-            } else {
-                actual_num = strtol(buf, NULL, 16);
-            }
-
-            if (minus_flag == 1) { actual_num |= 0x4000; }
-
-            sc_memorySet(instruction_counter, actual_num);
-            setvbuf(stdout, NULL, _IONBF, 0);
-            setvbuf(stdin, NULL, _IONBF, 0);
-            break;
-        case F5:;
-            int minus = 0;
-            __int16_t tmp_accum = 0;
-
-            if (buf[0] == '-') {
-                buf[0] = 0;
-                minus = 1;
-                tmp_accum = strtol(buf + 1, NULL, 16);
-            } else {
-                tmp_accum = strtol(buf, NULL, 16);
-            }
-
-            if (tmp_accum < MEMORY_MAX_CELL_VALUE && tmp_accum >= MEMORY_MIN_CELL_VALUE) {
-                accumulator = tmp_accum;
-                if (minus == 1) { accumulator |= 0x4000; }
-            }
-
-            break;
-        case F6:;
-            __int16_t new_instr_cnter = (__int16_t)atoi(buf);
-            if (new_instr_cnter < MEMORY_MAX_ADDRESS && new_instr_cnter >= MEMORY_MIN_ADDRESS) {
-                instruction_counter = new_instr_cnter;
-            }
-            break;
-        case LOAD:
-            buf[strlen(buf) - 1] = '\0';
-            sc_memoryLoad(buf);
-            break;
-        case SAVE:
-            buf[strlen(buf) - 1] = '\0';
-            sc_memorySave(buf);
-            break;
-        default:
-            break;
-        }
+        if (*k == ENTER)
+            CU_process_key_ENTER();
+        else if (*k == F5)
+            CU_process_key_F5();
+        else if (*k == F6)
+            CU_process_key_F6();
+        else if (*k == LOAD)
+            CU_process_key_LOAD();
+        else if (*k == SAVE)
+            CU_process_key_SAVE();
 
         close(term);
     }
@@ -320,10 +341,8 @@ void interface()
                              .it_interval.tv_usec = 0,
                              .it_value.tv_sec = 0,
                              .it_value.tv_usec = 0}; /* Timers. */
-    // setitimer(ITIMER_REAL, &nval, &oval);            /* Start
-    // timer. */
-    signal(SIGALRM, CU_icnt_increaser); /* Set signal state from alarm. */
-    signal(SIGUSR1, CU_reset);          /* Reset computer. */
+    signal(SIGALRM, CU_icnt_increaser);              /* Set signal state from alarm. */
+    signal(SIGUSR1, CU_reset);                       /* Reset computer. */
 
     while (1) {
         /* Reset key. */

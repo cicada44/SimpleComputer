@@ -1,3 +1,9 @@
+//-----------------------------------------------------------------------------
+//
+// Header for drawing interface. Contains functions for interface viewing.
+//
+//-----------------------------------------------------------------------------
+
 #pragma once
 
 #include <libreadkey/readkey.h>

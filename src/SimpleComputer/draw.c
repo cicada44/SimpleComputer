@@ -16,22 +16,28 @@
 #include <termios.h>
 #include <unistd.h>
 
+#define BUF_SIZE 16
+
 int output_memory_in_box(int x1, int y1, int x2, int y2)
 {
     int term = mt_open();
-
     char buf[BUF_SIZE] = {};
+    if (bc_box(x1, y1, x2, y2) == FAIL) {
+        close(term);
+        return FAIL;
+    }
 
-    bc_box(x1, y1, x2, y2);
-
-    __int16_t tval = 0;
-
-    ++x1; /* Goto next line... */
+    ++x1; // Goto next line...
 
     for (__uint8_t i = MEMORY_MIN_ADDRESS; i != MEMORY_SIZE / 10; ++i) {
-        if (mt_gotoXX(x1++, y1 + 1) == FAIL) { return FAIL; } /* Goto next line... */
+        if (mt_gotoXX(x1++, y1 + 1) == FAIL) { // Goto next line...
+            runtime_error_process(RE.ERROR_TERMINAL_INTERFACE);
+            close(term);
+            return FAIL;
+        }
 
-        for (int j = MEMORY_MIN_ADDRESS; j != MEMORY_SIZE / 10; ++j) { /* Print row of RAM. */
+        for (int j = MEMORY_MIN_ADDRESS; j != MEMORY_SIZE / 10; ++j) { // Print row of RAM.
+            __int16_t tval = 0;
             if (sc_memoryGet(i * (MEMORY_SIZE / 10) + j, &tval) == FAIL) {
                 runtime_error_process(RE.ERROR_MEM_GET);
                 close(term);
@@ -39,35 +45,23 @@ int output_memory_in_box(int x1, int y1, int x2, int y2)
             }
 
             if (i * (MEMORY_SIZE / 10) + j
-                == instruction_counter) { /* Setting solor for instruction
-                                             counter output. */
+                == instruction_counter) { // Setting color for instruction counter output.
                 mt_setfgcolor(BLACK);
                 mt_setbgcolor(WHITE);
             }
 
-            if (tval >> 14 == 1) { /* Output value. */
-                write(term, "-", 2);
-            } else {
-                write(term, "+", 2);
-            }
+            write(term, (tval >> 14 == 1) ? "-" : "+", 2); // Output value.
 
             tval &= 0x7fff;
-
             __int8_t command = 0, operand = 0;
-
             sc_commandDecode(tval, &command, &operand);
-            sprintf(buf, "%02X%02X", command & 0x7f, operand & 0x7f);
 
-            if (write(term, buf, sizeof(buf)) == FAIL) {
-                runtime_error_process(RE.ERROR_TERMINAL_INTERFACE);
-                close(term);
-                return FAIL;
-            }
+            sprintf(buf, "%02X%02X", command & 0x7f, operand & 0x7f);
+            write(term, buf, sizeof(buf));
 
             if (i * (MEMORY_SIZE / 10) + j == instruction_counter) { mt_resetcolor(); }
 
-            sprintf(buf, " ");
-            write(term, buf, 1);
+            write(term, " ", 1);
         }
 
         bc_printNL();
@@ -80,7 +74,6 @@ int output_memory_in_box(int x1, int y1, int x2, int y2)
     }
 
     close(term);
-
     return SUCCESS;
 }
 
@@ -88,7 +81,10 @@ int output_accum()
 {
     int term = mt_open();
 
-    if (bc_box(1, 63, 1, 20) == FAIL) { return FAIL; }
+    if (bc_box(1, 63, 1, 20) == FAIL) {
+        close(term);
+        return FAIL;
+    }
 
     mt_gotoXX(1, 67);
     write(term, TITLE_ACCUM, sizeof(TITLE_ACCUM));
@@ -97,20 +93,15 @@ int output_accum()
 
     mt_gotoXX(2, 71);
 
-    if (accum_value & 0x4000) { /* Output value. */
-        write(term, "-", 2);
-    } else {
-        write(term, "+", 2);
-    }
+    write(term, (accum_value & 0x4000) ? "-" : "+", 2); // Output value.
 
     if (accum_value < 0) { accum_value = abs(accum_value); }
 
-    char buf[16] = {};
+    char buf[BUF_SIZE] = {};
     sprintf(buf, "%04X", accum_value & 0x3fff);
     write(term, buf, BUF_SIZE);
 
     close(term);
-
     return SUCCESS;
 }
 
@@ -138,7 +129,6 @@ int output_instrcounter()
     write(term, buf, sizeof(buf));
 
     close(term);
-
     return SUCCESS;
 }
 
@@ -162,16 +152,10 @@ int output_operation()
 
     mt_gotoXX(8, 69);
 
-    if ((actual_operation & 0x4000) >> 14 == 1) {
-        write(term, MINUS, sizeof(MINUS));
-    } else {
-        write(term, PLUS, sizeof(PLUS));
-    }
-
+    write(term, (actual_operation & 0x4000) ? MINUS : PLUS, sizeof(MINUS) - 1);
     write(term, buf, BUF_SIZE);
 
     close(term);
-
     return SUCCESS;
 }
 
@@ -212,7 +196,6 @@ int output_flags()
     write(term, ((value) ? FLAG_OUT_OF_MEM : ""), 1);
 
     close(term);
-
     return SUCCESS;
 }
 
@@ -248,7 +231,6 @@ int output_keys()
     write(term, TITLE_KEYS_INSTRCNTER, sizeof(TITLE_KEYS_INSTRCNTER));
 
     close(term);
-
     return SUCCESS;
 }
 
@@ -264,7 +246,6 @@ int output_iofield()
 
     write(term, "> ", sizeof("> "));
     close(term);
-
     return SUCCESS;
 }
 

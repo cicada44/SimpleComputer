@@ -1,3 +1,9 @@
+//-----------------------------------------------------------------------------
+//
+// Header for CU. Contains functions for simulating CU.
+//
+//-----------------------------------------------------------------------------
+
 #pragma once
 
 #include <libreadkey/readkey.h>
@@ -51,7 +57,4 @@ void CU_check_n_reset_comp();
 /* Detects next event. If ignore state == 0 sets timer & executes ALU. Otherwise
  * readkey.*/
 void CU_detect_n_execute_program(
-        __int8_t* ignore_state,
-        struct itimerval* nval,
-        struct itimerval* oval,
-        enum keys* k);
+        __int8_t* ignore_state, struct itimerval* nval, struct itimerval* oval, enum keys* k);
