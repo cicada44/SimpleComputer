@@ -1,7 +1,8 @@
 # Simple Computer
 
 Simple Computer is a model of a computer system that can process commands stored in the memory. It provides an implementation of the central processing unit (CPU) and supports two translators: one for the Simple Assembler language and another for the Simple Basic language.
-Introduction
+
+## Introduction
 
 The Simple Computer project aims to create a computer model capable of processing commands stored in the memory. The project includes an implementation of the central processing unit (CPU) and provides two translators for the Simple Assembler and Simple Basic languages.
 
